@@ -34,11 +34,11 @@ struct OutputWindowView: View {
             Divider()
 
             HStack {
-                Text("\(runner.sessions.count) 条记录")
+                Text(L("%@ 条记录", String(runner.sessions.count)))
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 Spacer()
-                Button("清空") { runner.clearHistory() }
+                Button(L("清空")) { runner.clearHistory() }
                     .buttonStyle(.borderless)
                     .font(.caption)
                     .disabled(runner.sessions.allSatisfy(\.isRunning))
@@ -54,9 +54,9 @@ struct OutputWindowView: View {
             SRSessionDetailView(session: session)
                 .id(session.id)
         } else {
-            ContentUnavailableView("还没有运行记录",
+            ContentUnavailableView(L("还没有运行记录"),
                                    systemImage: "text.alignleft",
-                                   description: Text("从访达右键菜单执行一条命令，或者在编辑器里点「试运行」。"))
+                                   description: Text(L("从访达右键菜单执行一条命令，或者在编辑器里点「试运行」。")))
         }
     }
 
@@ -141,7 +141,7 @@ private struct SRSessionDetailView: View {
                 Spacer()
 
                 if session.isRunning {
-                    Button("停止") { session.cancel() }
+                    Button(L("停止")) { session.cancel() }
                         .controlSize(.small)
                 }
 
@@ -149,16 +149,16 @@ private struct SRSessionDetailView: View {
                     NSPasteboard.general.clearContents()
                     NSPasteboard.general.setString(session.output, forType: .string)
                 } label: {
-                    Label("拷贝输出", systemImage: "doc.on.doc")
+                    Label(L("拷贝输出"), systemImage: "doc.on.doc")
                 }
                 .controlSize(.small)
                 .disabled(session.output.isEmpty)
             }
 
             HStack(spacing: 6) {
-                Text("耗时 \(String(format: "%.2f", session.duration))s")
+                Text(L("耗时 %@s", String(format: "%.2f", session.duration)))
                 Text("·")
-                Text("\(session.paths.count) 个项目")
+                Text(L("%@ 个项目", String(session.paths.count)))
                 Text("·")
                 Button(session.workingDirectory) {
                     NSWorkspace.shared.activateFileViewerSelecting(
@@ -169,7 +169,7 @@ private struct SRSessionDetailView: View {
                 .lineLimit(1)
                 .truncationMode(.head)
                 Spacer()
-                Button(showingScript ? "隐藏脚本" : "查看脚本") {
+                Button(showingScript ? L("隐藏脚本") : L("查看脚本")) {
                     showingScript.toggle()
                 }
                 .buttonStyle(.link)
@@ -204,7 +204,7 @@ private struct SRSessionDetailView: View {
         ScrollViewReader { proxy in
             ScrollView {
                 Text(session.output.isEmpty
-                     ? (session.isRunning ? "等待输出…" : "（没有输出）")
+                     ? (session.isRunning ? L("等待输出…") : L("（没有输出）"))
                      : session.output)
                     .font(.system(.body, design: .monospaced))
                     .foregroundStyle(session.output.isEmpty ? .secondary : .primary)

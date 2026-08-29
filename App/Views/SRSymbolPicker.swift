@@ -26,7 +26,7 @@ struct SRSymbolPicker: View {
         HStack(spacing: 8) {
             symbolPreview
 
-            TextField("SF Symbol 名称", text: $symbol)
+            TextField(L("SF Symbol 名称"), text: $symbol)
                 .textFieldStyle(.roundedBorder)
 
             Button {
@@ -35,7 +35,7 @@ struct SRSymbolPicker: View {
                 Image(systemName: "square.grid.2x2")
             }
             .buttonStyle(.bordered)
-            .help("从常用图标里挑一个")
+            .help(L("从常用图标里挑一个"))
             .popover(isPresented: $showingGrid, arrowEdge: .bottom) {
                 grid
             }

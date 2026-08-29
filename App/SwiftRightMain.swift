@@ -1,4 +1,5 @@
 import AppKit
+import Combine
 import SwiftUI
 
 @main
@@ -20,12 +21,14 @@ final class SRAppDelegate: NSObject, NSApplicationDelegate {
     private var statusItem: NSStatusItem?
     /// 冷启动时是不是因为点了右键菜单才被拉起来的。
     private var launchedForTicket = false
+    private var cancellables = Set<AnyCancellable>()
 
     // MARK: - 启动
 
     func applicationWillFinishLaunching(_ notification: Notification) {
         // 默认不占 Dock、不抢焦点；有窗口时 SRWindowManager 会临时切回 .regular。
         NSApp.setActivationPolicy(.accessory)
+        SRPreferences.shared.applyTheme()
         NSApp.mainMenu = SRMainMenu.build()
     }
 
@@ -34,6 +37,7 @@ final class SRAppDelegate: NSObject, NSApplicationDelegate {
         SRTicket.pruneStale()
         _ = SRAppModel.shared
         installStatusItem()
+        observeLanguageChanges()
 
         // URL 事件到底在 didFinishLaunching 之前还是之后送达，各系统版本并不一致。
         // 稍等一拍再判断：如果这次启动是为了执行命令，就别把主窗口弹出来。
@@ -50,6 +54,21 @@ final class SRAppDelegate: NSObject, NSApplicationDelegate {
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows: Bool) -> Bool {
         SRWindowManager.shared.showManager()
         return true
+    }
+
+    // MARK: - 语言
+
+    /// 主菜单、菜单栏菜单、窗口标题都是命令式搭出来的，
+    /// SwiftUI 那套 `.id()` 重建管不到它们，只能收到通知后自己重来一遍。
+    private func observeLanguageChanges() {
+        SRPreferences.shared.languageDidChange
+            .receive(on: RunLoop.main)
+            .sink { [weak self] in
+                NSApp.mainMenu = SRMainMenu.build()
+                self?.rebuildStatusMenu()
+                SRWindowManager.shared.refreshWindowTitles()
+            }
+            .store(in: &cancellables)
     }
 
     // MARK: - 扩展回调
@@ -93,7 +112,11 @@ final class SRAppDelegate: NSObject, NSApplicationDelegate {
         item.button?.image = NSImage(systemSymbolName: "bolt.circle",
                                      accessibilityDescription: "SwiftRight")
         item.button?.image?.isTemplate = true
+        statusItem = item
+        rebuildStatusMenu()
+    }
 
+    private func rebuildStatusMenu() {
         let menu = NSMenu()
         func add(_ title: String, _ action: Selector, key: String = "") {
             let entry = NSMenuItem(title: title, action: action, keyEquivalent: key)
@@ -101,21 +124,29 @@ final class SRAppDelegate: NSObject, NSApplicationDelegate {
             menu.addItem(entry)
         }
 
-        add("管理命令…", #selector(showManager))
-        add("运行输出…", #selector(showOutput))
+        add(L("管理命令…"), #selector(showManager))
+        add(L("运行输出…"), #selector(showOutput))
         menu.addItem(.separator())
-        add("重新载入配置", #selector(reloadConfig))
-        add("重启访达", #selector(relaunchFinder))
+        add(L("设置…"), #selector(showSettings), key: ",")
         menu.addItem(.separator())
-        add("退出 SwiftRight", #selector(quit), key: "q")
+        add(L("重新载入配置"), #selector(reloadConfig))
+        add(L("重启访达"), #selector(relaunchFinder))
+        menu.addItem(.separator())
+        add(L("退出 SwiftRight"), #selector(quit), key: "q")
 
-        item.menu = menu
-        statusItem = item
+        statusItem?.menu = menu
     }
 
     @objc private func showManager() { SRWindowManager.shared.showManager() }
     @objc private func showOutput() { SRWindowManager.shared.showOutput() }
+    @objc private func showSettings() { SRWindowManager.shared.showSettings() }
     @objc private func quit() { NSApp.terminate(nil) }
+
+    /// 主菜单里的「设置…」把 target 留空，靠响应链走到这里，
+    /// 所以这个方法不能是 private，签名也得带 sender。
+    @objc func showSettingsFromMenu(_ sender: Any?) {
+        SRWindowManager.shared.showSettings()
+    }
 
     @objc private func reloadConfig() {
         SRAppModel.shared.load()

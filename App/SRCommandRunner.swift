@@ -136,7 +136,7 @@ final class SRCommandRunner: ObservableObject {
             try process.run()
             session.attach(process)
         } catch {
-            session.finish(exitCode: nil, failureReason: "无法启动：\(error.localizedDescription)")
+            session.finish(exitCode: nil, failureReason: L("无法启动：") + error.localizedDescription)
             return
         }
 
@@ -169,7 +169,7 @@ final class SRCommandRunner: ObservableObject {
             let shell = command.shell.isEmpty ? "/bin/zsh" : command.shell
             guard FileManager.default.isExecutableFile(atPath: shell) else {
                 throw NSError(domain: "SwiftRight", code: 2, userInfo: [
-                    NSLocalizedDescriptionKey: "解释器不存在或不可执行：\(shell)"
+                    NSLocalizedDescriptionKey: L("解释器不存在或不可执行：") + shell
                 ])
             }
             process.executableURL = URL(fileURLWithPath: shell)
@@ -210,7 +210,7 @@ final class SRCommandRunner: ObservableObject {
             try body.write(to: file, atomically: true, encoding: .utf8)
             try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: file.path)
         } catch {
-            presentError("无法生成终端脚本：\(error.localizedDescription)")
+            presentError(L("无法生成终端脚本：") + error.localizedDescription)
             return
         }
 
@@ -221,7 +221,7 @@ final class SRCommandRunner: ObservableObject {
             NSWorkspace.shared.open([file], withApplicationAt: terminal, configuration: configuration) { _, error in
                 if let error {
                     DispatchQueue.main.async {
-                        self.presentError("无法启动终端：\(error.localizedDescription)")
+                        self.presentError(L("无法启动终端：") + error.localizedDescription)
                     }
                 }
             }
@@ -299,12 +299,11 @@ final class SRCommandRunner: ObservableObject {
 
         if command.notifyOnFinish {
             notify(title: command.title,
-                   body: failed ? "执行失败（\(session.statusText)）" : "执行完成")
+                   body: failed ? L("执行失败（%@）", session.statusText) : L("执行完成"))
         }
 
         // 后台命令失败时如果什么都不提示，用户根本不知道出了事。
-        if failed, command.runMode == .background,
-           UserDefaults.standard.object(forKey: SRDefaults.openOutputOnFailure) as? Bool ?? true {
+        if failed, command.runMode == .background, SRPreferences.shared.openOutputOnFailure {
             focusedSession = session
             onNeedsOutputWindow()
         }
@@ -329,15 +328,16 @@ final class SRCommandRunner: ObservableObject {
     private func confirm(command: SRCommand, paths: [String]) -> Bool {
         NSApp.activate(ignoringOtherApps: true)
         let alert = NSAlert()
-        alert.messageText = "确定要执行「\(command.title)」吗？"
+        alert.messageText = L("确定要执行「%@」吗？", command.title)
         alert.informativeText = paths.count == 1
             ? paths[0]
-            : "将作用于 \(paths.count) 个项目：\n" + paths.prefix(5).map {
-                ($0 as NSString).lastPathComponent
-            }.joined(separator: "\n") + (paths.count > 5 ? "\n…" : "")
+            : L("将作用于 %@ 个项目：", String(paths.count)) + "\n"
+                + paths.prefix(5).map { ($0 as NSString).lastPathComponent }
+                    .joined(separator: "\n")
+                + (paths.count > 5 ? "\n…" : "")
         alert.alertStyle = .warning
-        alert.addButton(withTitle: "执行")
-        alert.addButton(withTitle: "取消")
+        alert.addButton(withTitle: L("执行"))
+        alert.addButton(withTitle: L("取消"))
         return alert.runModal() == .alertFirstButtonReturn
     }
 

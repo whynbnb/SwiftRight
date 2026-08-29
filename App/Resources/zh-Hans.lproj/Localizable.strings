@@ -1,0 +1,5 @@
+/* SwiftRight — 简体中文。
+
+   源语言就是中文，key 即原文，所以这个表刻意留空。
+   它存在的意义是让 App bundle 里有 zh-Hans.lproj，
+   系统才会把 SwiftRight 认作支持简体中文的 App。 */

@@ -1,0 +1,219 @@
+/* SwiftRight — English strings.
+
+   源语言是中文，所以 key 就是中文原文。
+   查不到的 key 会回退成中文原文本身，不会显示成裸 key。 */
+
+/* MARK: - 通用动作 */
+"执行" = "Run";
+"取消" = "Cancel";
+"删除" = "Delete";
+"复制一份" = "Duplicate";
+"新建" = "New";
+"清空" = "Clear";
+"停止" = "Stop";
+"追加" = "Append";
+"好" = "OK";
+"完成" = "Done";
+"已结束" = "Finished";
+"已取消" = "Cancelled";
+"自定义…" = "Custom…";
+"不分组" = "No group";
+
+/* MARK: - 主菜单 */
+"关于 SwiftRight" = "About SwiftRight";
+"设置…" = "Settings…";
+"隐藏 SwiftRight" = "Hide SwiftRight";
+"隐藏其他" = "Hide Others";
+"显示全部" = "Show All";
+"退出 SwiftRight" = "Quit SwiftRight";
+"编辑" = "Edit";
+"撤销" = "Undo";
+"重做" = "Redo";
+"剪切" = "Cut";
+"拷贝" = "Copy";
+"粘贴" = "Paste";
+"全选" = "Select All";
+"窗口" = "Window";
+"最小化" = "Minimize";
+"缩放" = "Zoom";
+"关闭" = "Close";
+
+/* MARK: - 菜单栏 */
+"管理命令…" = "Manage Commands…";
+"运行输出…" = "Output…";
+"重新载入配置" = "Reload Configuration";
+"重启访达" = "Restart Finder";
+
+/* MARK: - 窗口标题 */
+"运行输出" = "Output";
+"设置" = "Settings";
+
+/* MARK: - 主窗口 */
+"还没有命令" = "No commands yet";
+"点左上角的 + 新建一条，它会立刻出现在访达的右键菜单里。" = "Click + in the toolbar to create one. It shows up in Finder's context menu right away.";
+"新建命令" = "New Command";
+"删除选中的命令" = "Delete the selected command";
+"查看运行输出" = "View output";
+"已启用" = "Enabled";
+"已停用" = "Disabled";
+"配置保存失败：" = "Failed to save configuration: ";
+
+/* MARK: - 命令编辑器 */
+"基本信息" = "Basics";
+"标题" = "Title";
+"显示在右键菜单里的名字" = "Name shown in the context menu";
+"图标" = "Icon";
+"分组" = "Group";
+"留空则直接放在菜单里" = "Leave empty to place it directly in the menu";
+"同名分组的命令会被收进同一个二级子菜单。" = "Commands sharing a group name are collected into the same submenu.";
+
+"脚本" = "Script";
+"插入占位符" = "Insert placeholder";
+"选中的路径同时会作为 $1 $2 … 传给脚本，写 \"$@\" 与写 {paths} 等价。" = "Selected paths are also passed as $1 $2 …, so \"$@\" is equivalent to {paths}.";
+"占位符默认已做 shell 转义；需要原始文本时用 {path:raw} 这种写法。" = "Placeholders are shell-quoted by default. Use {path:raw} when you need the raw text.";
+"脚本以 #! 开头时会按 shebang 执行，下面的解释器设置将被忽略。" = "A script starting with #! runs via its shebang; the interpreter setting below is ignored.";
+"解释器" = "Interpreter";
+"解释器绝对路径" = "Absolute path to the interpreter";
+
+"运行方式" = "Execution";
+"完成后" = "On finish";
+"后台静默运行" = "Run silently in background";
+"显示输出窗口" = "Show output window";
+"在终端中运行" = "Run in Terminal";
+"工作目录" = "Working directory";
+"选中项所在文件夹" = "Folder containing the selection";
+"选中的文件夹本身" = "The selected folder itself";
+"当前访达窗口" = "Current Finder window";
+"自定义路径" = "Custom path";
+"路径" = "Path";
+"支持占位符，例如 {home}/Desktop" = "Placeholders allowed, e.g. {home}/Desktop";
+"每个选中项各跑一次" = "Run once per selected item";
+"关掉的话，所有选中路径会一次性传给同一个进程。" = "When off, all selected paths are passed to a single process.";
+"执行前弹窗确认" = "Confirm before running";
+"完成后发送通知" = "Notify when finished";
+
+"适用范围" = "Scope";
+"适用于" = "Applies to";
+"文件和文件夹" = "Files and folders";
+"仅文件" = "Files only";
+"仅文件夹" = "Folders only";
+"扩展名" = "Extensions";
+"留空表示不限，多个用逗号分隔，如 jpg, png" = "Leave empty for any. Comma-separated, e.g. jpg, png";
+"允许多选" = "Allow multiple selection";
+"关掉之后，选中多个文件时这条命令不会出现在菜单里。" = "When off, this command is hidden whenever more than one item is selected.";
+"启用（显示在右键菜单中）" = "Enabled (shown in the context menu)";
+
+"高级" = "Advanced";
+"超时" = "Timeout";
+"不限制" = "No limit";
+"%@ 秒" = "%@s";
+"试运行…" = "Test Run…";
+"试运行" = "Test Run";
+"挑几个文件当作选中项，立刻跑一次并显示输出" = "Pick a few files to stand in for the selection, run once, and show the output";
+"选择用于试运行的文件或文件夹" = "Choose files or folders for the test run";
+
+/* MARK: - 占位符说明 */
+"第一个选中项的完整路径" = "Full path of the first selected item";
+"全部选中项，空格分隔" = "All selected items, space-separated";
+"文件名（含扩展名）" = "File name, with extension";
+"全部文件名" = "All file names";
+"文件名（不含扩展名）" = "File name, without extension";
+"扩展名，不含点" = "Extension, without the dot";
+"所在文件夹" = "Containing folder";
+"当前 Finder 窗口文件夹" = "Current Finder window's folder";
+"选中项数量" = "Number of selected items";
+"用户主目录" = "Home directory";
+"时间戳 yyyyMMdd-HHmmss" = "Timestamp, yyyyMMdd-HHmmss";
+
+/* MARK: - 输出窗口 */
+"%@ 条记录" = "%@ runs";
+"还没有运行记录" = "No runs yet";
+"从访达右键菜单执行一条命令，或者在编辑器里点「试运行」。" = "Run a command from Finder's context menu, or hit Test Run in the editor.";
+"拷贝输出" = "Copy Output";
+"耗时 %@s" = "%@s";
+"%@ 个项目" = "%@ items";
+"隐藏脚本" = "Hide script";
+"查看脚本" = "Show script";
+"等待输出…" = "Waiting for output…";
+"（没有输出）" = "(no output)";
+"运行中…" = "Running…";
+"超时中止" = "Timed out";
+"退出码 %@" = "Exit code %@";
+"输出过长，已截断" = "output truncated";
+
+/* MARK: - 设置：通用 */
+"通用" = "General";
+"菜单" = "Menu";
+"配置" = "Configuration";
+"扩展" = "Extension";
+"外观" = "Appearance";
+"语言" = "Language";
+"主题" = "Theme";
+"跟随系统" = "System";
+"浅色" = "Light";
+"深色" = "Dark";
+"语言切换即时生效，无需重启。" = "Language changes take effect immediately — no restart needed.";
+"行为" = "Behavior";
+"后台命令失败时自动打开输出窗口" = "Open the output window when a background command fails";
+"关掉之后，后台命令失败只会静静地记在「运行输出」里。" = "When off, a failed background command is only recorded quietly under Output.";
+
+/* MARK: - 设置：菜单 */
+"右键菜单" = "Context Menu";
+"收进一个二级菜单" = "Collect into a submenu";
+"右键菜单里只出现一项，命令都在它的子菜单下。" = "Only one item appears in the context menu; all commands live in its submenu.";
+"所有命令直接平铺在右键菜单里。命令多了会很长，慎用。" = "All commands sit directly in the context menu. This gets long fast — use with care.";
+"菜单名称" = "Menu title";
+"菜单图标" = "Menu icon";
+"在菜单项上显示图标" = "Show icons on menu items";
+"生效方式" = "How changes apply";
+"改动会立即写入配置文件，访达扩展下一次右键就会读到，不需要重启访达。" = "Changes are written to the configuration file immediately and picked up on the next right-click. No need to restart Finder.";
+
+/* MARK: - 设置：配置 */
+"导入与导出" = "Import & Export";
+"命令列表和菜单设置会被完整导出为一个 JSON 文件，方便在多台机器之间同步。" = "Your commands and menu settings export to a single JSON file, handy for syncing across machines.";
+"导出…" = "Export…";
+"导入并追加…" = "Import and Append…";
+"导入并替换…" = "Import and Replace…";
+"「追加」会保留你现有的命令；ID 冲突时导入的那条会重新分配 ID，不会覆盖。" = "Append keeps your existing commands. On an ID collision the imported one is reassigned a new ID rather than overwriting.";
+"配置文件位置" = "Configuration File";
+"在访达中显示" = "Show in Finder";
+"重新载入" = "Reload";
+"恢复示例命令" = "Restore Examples";
+"App 与访达扩展共用这一份文件。" = "The app and the Finder extension share this one file.";
+"导出失败" = "Export failed";
+"导入失败" = "Import failed";
+"恢复示例命令？" = "Restore example commands?";
+"示例命令会追加到现有列表末尾，不会删除你已有的命令。" = "The examples are appended to your list. Nothing you already have is removed.";
+
+/* MARK: - 设置：扩展 */
+"访达扩展" = "Finder Extension";
+"扩展已启用" = "Extension enabled";
+"扩展未启用" = "Extension not enabled";
+"怎么让右键菜单出现" = "How to make the context menu appear";
+"把 SwiftRight.app 放进「应用程序」文件夹并至少打开一次，系统才会登记它的访达扩展。" = "Put SwiftRight.app in your Applications folder and open it at least once, so the system registers its Finder extension.";
+"打开「系统设置 › 通用 › 登录项与扩展」，在「访达扩展」里勾选 SwiftRight。" = "Open System Settings › General › Login Items & Extensions, then enable SwiftRight under Finder extensions.";
+"如果菜单还是不出现，重启一次访达。" = "If the menu still doesn't show up, restart Finder.";
+"打开系统设置" = "Open System Settings";
+"重新注册扩展" = "Re-register Extension";
+"找不到扩展：" = "Extension not found: ";
+"未知路径" = "unknown path";
+"已注册，请到系统设置里勾选 SwiftRight。" = "Registered. Now enable SwiftRight in System Settings.";
+"注册失败（退出码 %@）" = "Registration failed (exit code %@) ";
+"注册失败：" = "Registration failed: ";
+
+/* MARK: - 图标选择 */
+"SF Symbol 名称" = "SF Symbol name";
+"从常用图标里挑一个" = "Pick from common symbols";
+
+/* MARK: - 运行时消息 */
+"新建命令" = "New Command";
+"# 选中的路径会作为 $1 $2 … 传进来，也可以用 {paths}" = "# Selected paths arrive as $1 $2 …, or use {paths}";
+" 副本" = " copy";
+"无法启动：" = "Failed to launch: ";
+"解释器不存在或不可执行：" = "Interpreter missing or not executable: ";
+"无法生成终端脚本：" = "Could not create the Terminal script: ";
+"无法启动终端：" = "Could not launch Terminal: ";
+"执行失败（%@）" = "Failed (%@)";
+"执行完成" = "Completed";
+"确定要执行「%@」吗？" = "Run “%@”?";
+"将作用于 %@ 个项目：" = "This will act on %@ items:";

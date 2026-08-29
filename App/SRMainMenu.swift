@@ -34,20 +34,24 @@ enum SRMainMenu {
         let name = "SwiftRight"
         let menu = NSMenu(title: name)
 
-        append(to: menu, "关于 \(name)",
+        append(to: menu, L("关于 SwiftRight"),
                #selector(NSApplication.orderFrontStandardAboutPanel(_:)))
         menu.addItem(.separator())
 
-        append(to: menu, "隐藏 \(name)",
+        append(to: menu, L("设置…"),
+               #selector(SRAppDelegate.showSettingsFromMenu(_:)), key: ",")
+        menu.addItem(.separator())
+
+        append(to: menu, L("隐藏 SwiftRight"),
                #selector(NSApplication.hide(_:)), key: "h")
-        append(to: menu, "隐藏其他",
+        append(to: menu, L("隐藏其他"),
                #selector(NSApplication.hideOtherApplications(_:)),
                key: "h", modifiers: [.command, .option])
-        append(to: menu, "显示全部",
+        append(to: menu, L("显示全部"),
                #selector(NSApplication.unhideAllApplications(_:)))
         menu.addItem(.separator())
 
-        append(to: menu, "退出 \(name)",
+        append(to: menu, L("退出 SwiftRight"),
                #selector(NSApplication.terminate(_:)), key: "q")
 
         let item = NSMenuItem()
@@ -58,21 +62,21 @@ enum SRMainMenu {
     // MARK: - 编辑菜单
 
     private static func editMenuItem() -> NSMenuItem {
-        let menu = NSMenu(title: "编辑")
+        let menu = NSMenu(title: L("编辑"))
 
         // undo:/redo: 没有公开的 Swift selector，只能按名字取。
-        append(to: menu, "撤销", Selector(("undo:")), key: "z")
-        append(to: menu, "重做", Selector(("redo:")), key: "z",
+        append(to: menu, L("撤销"), Selector(("undo:")), key: "z")
+        append(to: menu, L("重做"), Selector(("redo:")), key: "z",
                modifiers: [.command, .shift])
         menu.addItem(.separator())
 
-        append(to: menu, "剪切", #selector(NSText.cut(_:)), key: "x")
-        append(to: menu, "拷贝", #selector(NSText.copy(_:)), key: "c")
-        append(to: menu, "粘贴", #selector(NSText.paste(_:)), key: "v")
-        append(to: menu, "删除", #selector(NSText.delete(_:)))
-        append(to: menu, "全选", #selector(NSText.selectAll(_:)), key: "a")
+        append(to: menu, L("剪切"), #selector(NSText.cut(_:)), key: "x")
+        append(to: menu, L("拷贝"), #selector(NSText.copy(_:)), key: "c")
+        append(to: menu, L("粘贴"), #selector(NSText.paste(_:)), key: "v")
+        append(to: menu, L("删除"), #selector(NSText.delete(_:)))
+        append(to: menu, L("全选"), #selector(NSText.selectAll(_:)), key: "a")
 
-        let item = NSMenuItem(title: "编辑", action: nil, keyEquivalent: "")
+        let item = NSMenuItem(title: L("编辑"), action: nil, keyEquivalent: "")
         item.submenu = menu
         return item
     }
@@ -80,14 +84,14 @@ enum SRMainMenu {
     // MARK: - 窗口菜单
 
     private static func windowMenuItem() -> NSMenuItem {
-        let menu = NSMenu(title: "窗口")
+        let menu = NSMenu(title: L("窗口"))
 
-        append(to: menu, "最小化", #selector(NSWindow.performMiniaturize(_:)), key: "m")
-        append(to: menu, "缩放", #selector(NSWindow.performZoom(_:)))
+        append(to: menu, L("最小化"), #selector(NSWindow.performMiniaturize(_:)), key: "m")
+        append(to: menu, L("缩放"), #selector(NSWindow.performZoom(_:)))
         menu.addItem(.separator())
-        append(to: menu, "关闭", #selector(NSWindow.performClose(_:)), key: "w")
+        append(to: menu, L("关闭"), #selector(NSWindow.performClose(_:)), key: "w")
 
-        let item = NSMenuItem(title: "窗口", action: nil, keyEquivalent: "")
+        let item = NSMenuItem(title: L("窗口"), action: nil, keyEquivalent: "")
         item.submenu = menu
         NSApp.windowsMenu = menu
         return item

@@ -12,9 +12,14 @@ final class SRWindowManager: NSObject, NSWindowDelegate {
 
     private var managerWindow: NSWindow?
     private var outputWindow: NSWindow?
+    private var settingsWindow: NSWindow?
 
     private override init() {
         super.init()
+    }
+
+    private var allWindows: [NSWindow] {
+        [managerWindow, outputWindow, settingsWindow].compactMap { $0 }
     }
 
     // MARK: - 主窗口
@@ -29,9 +34,12 @@ final class SRWindowManager: NSObject, NSWindowDelegate {
             title: "SwiftRight",
             size: NSSize(width: 940, height: 620),
             minSize: NSSize(width: 760, height: 460),
-            content: RootView().environmentObject(SRAppModel.shared)
-        )
-        window.setFrameAutosaveName("SwiftRightManagerWindow")
+            autosaveName: "SwiftRightManagerWindow"
+        ) {
+            SRLocalizedRoot {
+                RootView().environmentObject(SRAppModel.shared)
+            }
+        }
         managerWindow = window
         present(window)
     }
@@ -45,14 +53,53 @@ final class SRWindowManager: NSObject, NSWindowDelegate {
         }
 
         let window = makeWindow(
-            title: "运行输出",
+            title: L("运行输出"),
             size: NSSize(width: 720, height: 480),
             minSize: NSSize(width: 480, height: 300),
-            content: OutputWindowView().environmentObject(SRCommandRunner.shared)
-        )
-        window.setFrameAutosaveName("SwiftRightOutputWindow")
+            autosaveName: "SwiftRightOutputWindow"
+        ) {
+            SRLocalizedRoot {
+                OutputWindowView().environmentObject(SRCommandRunner.shared)
+            }
+        }
         outputWindow = window
         present(window)
+    }
+
+    // MARK: - 设置窗口
+
+    func showSettings() {
+        if let settingsWindow {
+            present(settingsWindow)
+            return
+        }
+
+        // 设置窗口内容是固定尺寸的 TabView，不给缩放。
+        let window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 600, height: 540),
+            styleMask: [.titled, .closable],
+            backing: .buffered,
+            defer: false
+        )
+        window.title = L("设置")
+        window.isReleasedWhenClosed = false
+        window.delegate = self
+        window.contentView = NSHostingView(rootView: SRLocalizedRoot {
+            SRSettingsView()
+                .environmentObject(SRAppModel.shared)
+        })
+        window.center()
+        settingsWindow = window
+        present(window)
+    }
+
+    // MARK: - 语言切换
+
+    /// 窗口标题是 AppKit 属性，不在 SwiftUI 的重建范围里，得手动刷。
+    func refreshWindowTitles() {
+        managerWindow?.title = "SwiftRight"
+        outputWindow?.title = L("运行输出")
+        settingsWindow?.title = L("设置")
     }
 
     // MARK: - 构造
@@ -60,7 +107,8 @@ final class SRWindowManager: NSObject, NSWindowDelegate {
     private func makeWindow<Content: View>(title: String,
                                            size: NSSize,
                                            minSize: NSSize,
-                                           content: Content) -> NSWindow {
+                                           autosaveName: String,
+                                           @ViewBuilder content: () -> Content) -> NSWindow {
         let window = NSWindow(
             contentRect: NSRect(origin: .zero, size: size),
             styleMask: [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView],
@@ -68,12 +116,12 @@ final class SRWindowManager: NSObject, NSWindowDelegate {
             defer: false
         )
         window.title = title
-        window.titlebarAppearsTransparent = false
         window.minSize = minSize
         window.isReleasedWhenClosed = false
-        window.contentView = NSHostingView(rootView: content)
+        window.contentView = NSHostingView(rootView: content())
         window.delegate = self
         window.center()
+        window.setFrameAutosaveName(autosaveName)
         return window
     }
 
@@ -93,10 +141,7 @@ final class SRWindowManager: NSObject, NSWindowDelegate {
     }
 
     private func syncActivationPolicy() {
-        let hasVisibleWindow = [managerWindow, outputWindow]
-            .compactMap { $0 }
-            .contains { $0.isVisible }
-        if !hasVisibleWindow {
+        if !allWindows.contains(where: { $0.isVisible }) {
             NSApp.setActivationPolicy(.accessory)
         }
     }

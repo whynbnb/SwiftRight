@@ -111,8 +111,8 @@ final class SRAppModel: ObservableObject {
     @discardableResult
     func addCommand() -> UUID {
         var command = SRCommand()
-        command.title = "新建命令"
-        command.script = "# 选中的路径会作为 $1 $2 … 传进来，也可以用 {paths}\necho {paths}"
+        command.title = L("新建命令")
+        command.script = L("# 选中的路径会作为 $1 $2 … 传进来，也可以用 {paths}") + "\necho {paths}"
         command.runMode = .captureOutput
         command.sortIndex = commands.count
         commands.append(command)
@@ -124,7 +124,7 @@ final class SRAppModel: ObservableObject {
         guard let index = commands.firstIndex(where: { $0.id == id }) else { return }
         var copy = commands[index]
         copy.id = UUID()
-        copy.title += " 副本"
+        copy.title += L(" 副本")
         commands.insert(copy, at: index + 1)
         selection = copy.id
     }
@@ -210,7 +210,7 @@ final class SRAppModel: ObservableObject {
             .appendingPathComponent("FinderExtension.appex")
 
         guard let appexPath, FileManager.default.fileExists(atPath: appexPath.path) else {
-            return "找不到扩展：\(appexPath?.path ?? "未知路径")"
+            return L("找不到扩展：") + (appexPath?.path ?? L("未知路径"))
         }
 
         let process = Process()
@@ -227,11 +227,11 @@ final class SRAppModel: ObservableObject {
             let text = String(decoding: data, as: UTF8.self)
                 .trimmingCharacters(in: .whitespacesAndNewlines)
             if process.terminationStatus == 0 {
-                return text.isEmpty ? "已注册，请到系统设置里勾选 SwiftRight。" : text
+                return text.isEmpty ? L("已注册，请到系统设置里勾选 SwiftRight。") : text
             }
-            return "注册失败（退出码 \(process.terminationStatus)）\(text)"
+            return L("注册失败（退出码 %@）", String(process.terminationStatus)) + text
         } catch {
-            return "注册失败：\(error.localizedDescription)"
+            return L("注册失败：") + error.localizedDescription
         }
     }
 

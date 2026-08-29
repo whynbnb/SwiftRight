@@ -3,6 +3,9 @@ import Foundation
 // MARK: - 运行方式
 
 /// 命令执行完成后的呈现方式。
+///
+/// 面向用户的名字见 App/SRCommandDisplay.swift —— 那些要走本地化，
+/// 而本地化只存在于主 App，扩展 target 里没有。
 enum SRRunMode: String, Codable, CaseIterable, Identifiable {
     /// 静默在后台跑，只有失败时才提示。
     case background
@@ -12,14 +15,6 @@ enum SRRunMode: String, Codable, CaseIterable, Identifiable {
     case terminal
 
     var id: String { rawValue }
-
-    var displayName: String {
-        switch self {
-        case .background: return "后台静默运行"
-        case .captureOutput: return "显示输出窗口"
-        case .terminal: return "在终端中运行"
-        }
-    }
 }
 
 // MARK: - 工作目录
@@ -35,15 +30,6 @@ enum SRWorkingDirectory: String, Codable, CaseIterable, Identifiable {
     case custom
 
     var id: String { rawValue }
-
-    var displayName: String {
-        switch self {
-        case .selectionParent: return "选中项所在文件夹"
-        case .selectionItself: return "选中的文件夹本身"
-        case .targetFolder: return "当前 Finder 窗口"
-        case .custom: return "自定义路径"
-        }
-    }
 }
 
 // MARK: - 适用范围
@@ -54,14 +40,6 @@ enum SRSelectionKind: String, Codable, CaseIterable, Identifiable {
     case foldersOnly
 
     var id: String { rawValue }
-
-    var displayName: String {
-        switch self {
-        case .any: return "文件和文件夹"
-        case .filesOnly: return "仅文件"
-        case .foldersOnly: return "仅文件夹"
-        }
-    }
 }
 
 // MARK: - 命令模型

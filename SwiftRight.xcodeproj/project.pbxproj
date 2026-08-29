@@ -17,10 +17,14 @@
 		16EEDFA686BF03EAEF584ADA /* SRConfigStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A75813CF0FB8797010FACB3 /* SRConfigStore.swift */; };
 		1ED93313953A7C31977B447A /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 566717F5E913487D380CECBF /* RootView.swift */; };
 		31905EEF556B28BAC8682937 /* SRConfigStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A75813CF0FB8797010FACB3 /* SRConfigStore.swift */; };
+		3573D47159CD4B4909285459 /* SRPreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D2A15BC438B7F98D802ED37 /* SRPreferences.swift */; };
 		4D8175995BA208E7CD5BBCC5 /* FinderExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = C613828D9E2C6C3785082A0D /* FinderExtension.appex */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		5143C05152C6E4ED8B3A51D3 /* SRWindowManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCE637E6B82F3B4676248BBE /* SRWindowManager.swift */; };
 		538028588DB613E6B6BCB346 /* SRPlaceholder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78B5E8CBAEBA9076B0E31D3D /* SRPlaceholder.swift */; };
+		5A1219C52B775FFBF449BD20 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = FCBBD02F194BE86F76CA899D /* Localizable.strings */; };
 		61BA0F65F4B45214891163F7 /* SRPaths.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22CD14746B42C16B4D63D233 /* SRPaths.swift */; };
+		63CAE7CC06BE5F26CA5850F8 /* SRCommandDisplay.swift in Sources */ = {isa = PBXBuildFile; fileRef = A220884B1733DD779F23DAB0 /* SRCommandDisplay.swift */; };
+		9270FE06A1CF0179BB9686A1 /* SRSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 974ABC296C24049A946537E9 /* SRSettingsView.swift */; };
 		9562F5B906D0F6908C17E076 /* SRTicket.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BC99858BDF590DE8045C54F /* SRTicket.swift */; };
 		A01657C2B09AC086ED89A9A7 /* FinderSync.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 325F7719C72FD29BD573D30B /* FinderSync.framework */; };
 		A684D615D95908E097620DEE /* SRCommandEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FEB80F52100A0557047743E /* SRCommandEditorView.swift */; };
@@ -33,7 +37,6 @@
 		CF36A5AB2E8230262A172524 /* SRSymbolPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = B86EA23B335B0A275A356E12 /* SRSymbolPicker.swift */; };
 		D69C168FC92137BC99AF2C81 /* SRExtensionStatusBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB7A745ECD048BBD818B18C3 /* SRExtensionStatusBar.swift */; };
 		DD6582133A9AE8E7E0DB8F38 /* SRMainMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2C1590133A9BFDAC9F3A226 /* SRMainMenu.swift */; };
-		E00E2A9DE32FD3A0B9031249 /* SRGeneralSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E326C13A394BE70CBF9A923 /* SRGeneralSettingsView.swift */; };
 		F10B5E2A8C784DDA4ADC4E8E /* SRCommandRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 513B890A1FE3A1B8D9210D69 /* SRCommandRunner.swift */; };
 		FAD7A1833F3469D093E4C8B4 /* SRPlaceholder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78B5E8CBAEBA9076B0E31D3D /* SRPlaceholder.swift */; };
 /* End PBXBuildFile section */
@@ -66,25 +69,29 @@
 		22CD14746B42C16B4D63D233 /* SRPaths.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SRPaths.swift; sourceTree = "<group>"; };
 		24DB47131C7907CD299CBC21 /* SRCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SRCommand.swift; sourceTree = "<group>"; };
 		2A75813CF0FB8797010FACB3 /* SRConfigStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SRConfigStore.swift; sourceTree = "<group>"; };
-		2E326C13A394BE70CBF9A923 /* SRGeneralSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SRGeneralSettingsView.swift; sourceTree = "<group>"; };
 		325F7719C72FD29BD573D30B /* FinderSync.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = FinderSync.framework; path = System/Library/Frameworks/FinderSync.framework; sourceTree = SDKROOT; };
 		34063541DA9D02E8EE00D701 /* OutputWindowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OutputWindowView.swift; sourceTree = "<group>"; };
 		38300A1674D35D8245003EEE /* FinderSync.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FinderSync.swift; sourceTree = "<group>"; };
 		3C43093D51682284A73EDB0C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		4BC99858BDF590DE8045C54F /* SRTicket.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SRTicket.swift; sourceTree = "<group>"; };
+		4D2A15BC438B7F98D802ED37 /* SRPreferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SRPreferences.swift; sourceTree = "<group>"; };
 		4D8FACC8271E3725530E4DE4 /* SwiftRight.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SwiftRight.entitlements; sourceTree = "<group>"; };
 		4FEB80F52100A0557047743E /* SRCommandEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SRCommandEditorView.swift; sourceTree = "<group>"; };
 		513B890A1FE3A1B8D9210D69 /* SRCommandRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SRCommandRunner.swift; sourceTree = "<group>"; };
 		566717F5E913487D380CECBF /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		63035CF38DA4CCDAEEA99208 /* SRRunSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SRRunSession.swift; sourceTree = "<group>"; };
+		6ADCB146689C8EA418DD022F /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
 		7772906F4E9915B52682B9E5 /* FinderExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = FinderExtension.entitlements; sourceTree = "<group>"; };
 		78B5E8CBAEBA9076B0E31D3D /* SRPlaceholder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SRPlaceholder.swift; sourceTree = "<group>"; };
 		8F937B6746E68B697996A7C9 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		974ABC296C24049A946537E9 /* SRSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SRSettingsView.swift; sourceTree = "<group>"; };
 		9A64F420C7952A0E54FE1572 /* SwiftRightMain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftRightMain.swift; sourceTree = "<group>"; };
 		A042097199A895EE37C96B57 /* SwiftRight.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SwiftRight.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A220884B1733DD779F23DAB0 /* SRCommandDisplay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SRCommandDisplay.swift; sourceTree = "<group>"; };
 		A22D333A075523A49B291C89 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A7BF3955F485DD345402C9BB /* UserNotifications.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UserNotifications.framework; path = System/Library/Frameworks/UserNotifications.framework; sourceTree = SDKROOT; };
 		B86EA23B335B0A275A356E12 /* SRSymbolPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SRSymbolPicker.swift; sourceTree = "<group>"; };
+		B8C79518A3175942AB24CF40 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/Localizable.strings"; sourceTree = "<group>"; };
 		BB7A745ECD048BBD818B18C3 /* SRExtensionStatusBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SRExtensionStatusBar.swift; sourceTree = "<group>"; };
 		C613828D9E2C6C3785082A0D /* FinderExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = FinderExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		CCE637E6B82F3B4676248BBE /* SRWindowManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SRWindowManager.swift; sourceTree = "<group>"; };
@@ -131,8 +138,8 @@
 				566717F5E913487D380CECBF /* RootView.swift */,
 				4FEB80F52100A0557047743E /* SRCommandEditorView.swift */,
 				BB7A745ECD048BBD818B18C3 /* SRExtensionStatusBar.swift */,
-				2E326C13A394BE70CBF9A923 /* SRGeneralSettingsView.swift */,
 				EC8DBDD1995D0562BE3F03F0 /* SRScriptEditor.swift */,
+				974ABC296C24049A946537E9 /* SRSettingsView.swift */,
 				B86EA23B335B0A275A356E12 /* SRSymbolPicker.swift */,
 			);
 			path = Views;
@@ -148,6 +155,14 @@
 				4BC99858BDF590DE8045C54F /* SRTicket.swift */,
 			);
 			path = Shared;
+			sourceTree = "<group>";
+		};
+		32851EFBBE1547AD6FB7DFF0 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				FCBBD02F194BE86F76CA899D /* Localizable.strings */,
+			);
+			path = Resources;
 			sourceTree = "<group>";
 		};
 		6F5A19310CE2F547AD306E19 = {
@@ -185,12 +200,15 @@
 				A22D333A075523A49B291C89 /* Assets.xcassets */,
 				3C43093D51682284A73EDB0C /* Info.plist */,
 				EA95611080D146A7C95C090B /* SRAppModel.swift */,
+				A220884B1733DD779F23DAB0 /* SRCommandDisplay.swift */,
 				513B890A1FE3A1B8D9210D69 /* SRCommandRunner.swift */,
 				D2C1590133A9BFDAC9F3A226 /* SRMainMenu.swift */,
+				4D2A15BC438B7F98D802ED37 /* SRPreferences.swift */,
 				63035CF38DA4CCDAEEA99208 /* SRRunSession.swift */,
 				CCE637E6B82F3B4676248BBE /* SRWindowManager.swift */,
 				4D8FACC8271E3725530E4DE4 /* SwiftRight.entitlements */,
 				9A64F420C7952A0E54FE1572 /* SwiftRightMain.swift */,
+				32851EFBBE1547AD6FB7DFF0 /* Resources */,
 				10F8DC5F7C983183401614FC /* Views */,
 			);
 			path = App;
@@ -263,6 +281,7 @@
 			knownRegions = (
 				Base,
 				en,
+				"zh-Hans",
 			);
 			mainGroup = 6F5A19310CE2F547AD306E19;
 			minimizedProjectReferenceProxies = 1;
@@ -283,6 +302,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				08C5B75B80E706D719C90F7C /* Assets.xcassets in Resources */,
+				5A1219C52B775FFBF449BD20 /* Localizable.strings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -297,16 +317,18 @@
 				1ED93313953A7C31977B447A /* RootView.swift in Sources */,
 				0B1F243404FB0C2ABCE19003 /* SRAppModel.swift in Sources */,
 				0CBF8ABCDAEF505DEE776B26 /* SRCommand.swift in Sources */,
+				63CAE7CC06BE5F26CA5850F8 /* SRCommandDisplay.swift in Sources */,
 				A684D615D95908E097620DEE /* SRCommandEditorView.swift in Sources */,
 				F10B5E2A8C784DDA4ADC4E8E /* SRCommandRunner.swift in Sources */,
 				16EEDFA686BF03EAEF584ADA /* SRConfigStore.swift in Sources */,
 				D69C168FC92137BC99AF2C81 /* SRExtensionStatusBar.swift in Sources */,
-				E00E2A9DE32FD3A0B9031249 /* SRGeneralSettingsView.swift in Sources */,
 				DD6582133A9AE8E7E0DB8F38 /* SRMainMenu.swift in Sources */,
 				C10394B099D740912CD9BF8A /* SRPaths.swift in Sources */,
 				538028588DB613E6B6BCB346 /* SRPlaceholder.swift in Sources */,
+				3573D47159CD4B4909285459 /* SRPreferences.swift in Sources */,
 				B8E88B43AA72BF39A2627CE3 /* SRRunSession.swift in Sources */,
 				C681E926E1BA1C8200828C8A /* SRScriptEditor.swift in Sources */,
+				9270FE06A1CF0179BB9686A1 /* SRSettingsView.swift in Sources */,
 				CF36A5AB2E8230262A172524 /* SRSymbolPicker.swift in Sources */,
 				9562F5B906D0F6908C17E076 /* SRTicket.swift in Sources */,
 				5143C05152C6E4ED8B3A51D3 /* SRWindowManager.swift in Sources */,
@@ -336,6 +358,18 @@
 			targetProxy = 188961FC7F05A0CB29B63495 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
+
+/* Begin PBXVariantGroup section */
+		FCBBD02F194BE86F76CA899D /* Localizable.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				6ADCB146689C8EA418DD022F /* en */,
+				B8C79518A3175942AB24CF40 /* zh-Hans */,
+			);
+			name = Localizable.strings;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
 		1D38AC2BEAFAD561A9AE0839 /* Debug */ = {

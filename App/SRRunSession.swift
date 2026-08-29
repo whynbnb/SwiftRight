@@ -114,13 +114,13 @@ final class SRRunSession: ObservableObject, Identifiable {
     }
 
     var statusText: String {
-        if isRunning { return "运行中…" }
-        if timedOut { return "超时中止" }
+        if isRunning { return L("运行中…") }
+        if timedOut { return L("超时中止") }
         if let failureReason { return failureReason }
         if let exitCode {
-            return exitCode == 0 ? "完成" : "退出码 \(exitCode)"
+            return exitCode == 0 ? L("完成") : L("退出码 %@", String(exitCode))
         }
-        return "已结束"
+        return L("已结束")
     }
 
     // MARK: - 输出
@@ -153,7 +153,7 @@ final class SRRunSession: ObservableObject, Identifiable {
             if self.outputBytes + incoming > self.outputLimit {
                 let room = max(0, self.outputLimit - self.outputBytes)
                 self.output += String(text.prefix(room))
-                self.output += "\n\n… 输出过长，已截断 …\n"
+                self.output += "\n\n… " + L("输出过长，已截断") + " …\n"
                 self.truncated = true
             } else {
                 self.output += text
@@ -185,6 +185,6 @@ final class SRRunSession: ObservableObject, Identifiable {
         DispatchQueue.global().asyncAfter(deadline: .now() + 2) {
             kill(pid, SIGKILL)
         }
-        finish(exitCode: nil, failureReason: "已取消")
+        finish(exitCode: nil, failureReason: L("已取消"))
     }
 }
