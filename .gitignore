@@ -1,0 +1,19 @@
+# 构建产物
+.build/
+DerivedData/
+build/
+
+# macOS
+.DS_Store
+
+# Xcode 用户数据
+# .xcodeproj 本身入库（可直接打开，不必先装 xcodegen），
+# 但用户局部状态（窗口布局、断点、最近打开的文件）不入。
+xcuserdata/
+*.xcuserdatad
+*.xcuserstate
+*.xcscmblueprint
+*.xccheckout
+
+# SwiftRight 运行时数据（不该出现在仓库里）
+Scripts/*.log

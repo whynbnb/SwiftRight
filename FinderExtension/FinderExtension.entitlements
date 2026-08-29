@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- app extension 强制沙盒，这一项不能关。 -->
+	<key>com.apple.security.app-sandbox</key>
+	<true/>
+
+	<!-- 右键选中的文件本来就由 Finder 授权给扩展，这里只需要只读即可。 -->
+	<key>com.apple.security.files.user-selected.read-only</key>
+	<true/>
+
+	<!--
+	  扩展要读 commands.json、写调用凭据，而这两个文件必须落在主 App
+	  也能访问的真实 home 里，不能待在沙盒容器中。
+	  这条临时例外把权限精确限制在 SwiftRight 自己的目录下。
+	-->
+	<key>com.apple.security.temporary-exception.files.home-relative-path.read-write</key>
+	<array>
+		<string>/Library/Application Support/SwiftRight/</string>
+	</array>
+</dict>
+</plist>

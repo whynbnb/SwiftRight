@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!--
+	  主 App 刻意不开沙盒。
+	  整个工具的意义就是执行用户自己写的任意命令，一旦沙盒化，
+	  Process 起不了外部程序，能跑的东西就只剩下容器里那点内容了。
+	  沙盒的部分由访达扩展承担 —— app extension 强制沙盒，
+	  它只负责拼菜单和写一张凭据，不碰执行。
+	-->
+	<key>com.apple.security.app-sandbox</key>
+	<false/>
+
+	<!-- 用户自己写的脚本会去调各种解释器，禁掉库验证以免被拦。 -->
+	<key>com.apple.security.cs.disable-library-validation</key>
+	<true/>
+	<key>com.apple.security.cs.allow-unsigned-executable-memory</key>
+	<true/>
+</dict>
+</plist>
