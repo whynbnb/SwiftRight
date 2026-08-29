@@ -16,7 +16,9 @@
 		11CE75175D722CC3DCEB25D1 /* UserNotifications.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7BF3955F485DD345402C9BB /* UserNotifications.framework */; };
 		1236EBE1870F06FE370EE9AC /* SRTicket.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BC99858BDF590DE8045C54F /* SRTicket.swift */; };
 		16EEDFA686BF03EAEF584ADA /* SRConfigStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A75813CF0FB8797010FACB3 /* SRConfigStore.swift */; };
+		1B5F9D63D304C3D5D9CFE051 /* SREditorCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61A495D5F013D7806573FBDD /* SREditorCatalog.swift */; };
 		1ED93313953A7C31977B447A /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 566717F5E913487D380CECBF /* RootView.swift */; };
+		1F9D52FC4F373309C6B8228B /* SREditorTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = D765A3EF5919728DB3D231C0 /* SREditorTab.swift */; };
 		2B1992ADF238499343C31A81 /* SRTerminalTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = 67A90FE023627FEA622B014B /* SRTerminalTab.swift */; };
 		31905EEF556B28BAC8682937 /* SRConfigStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A75813CF0FB8797010FACB3 /* SRConfigStore.swift */; };
 		3573D47159CD4B4909285459 /* SRPreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D2A15BC438B7F98D802ED37 /* SRPreferences.swift */; };
@@ -40,6 +42,7 @@
 		CF36A5AB2E8230262A172524 /* SRSymbolPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = B86EA23B335B0A275A356E12 /* SRSymbolPicker.swift */; };
 		D69C168FC92137BC99AF2C81 /* SRExtensionStatusBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB7A745ECD048BBD818B18C3 /* SRExtensionStatusBar.swift */; };
 		DD6582133A9AE8E7E0DB8F38 /* SRMainMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2C1590133A9BFDAC9F3A226 /* SRMainMenu.swift */; };
+		E36840BEE728093DD23A76C0 /* SREditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 408CDDBFC6B4C45C40EEC19D /* SREditor.swift */; };
 		F10B5E2A8C784DDA4ADC4E8E /* SRCommandRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 513B890A1FE3A1B8D9210D69 /* SRCommandRunner.swift */; };
 		FAD7A1833F3469D093E4C8B4 /* SRPlaceholder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78B5E8CBAEBA9076B0E31D3D /* SRPlaceholder.swift */; };
 /* End PBXBuildFile section */
@@ -78,12 +81,14 @@
 		34063541DA9D02E8EE00D701 /* OutputWindowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OutputWindowView.swift; sourceTree = "<group>"; };
 		38300A1674D35D8245003EEE /* FinderSync.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FinderSync.swift; sourceTree = "<group>"; };
 		3C43093D51682284A73EDB0C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		408CDDBFC6B4C45C40EEC19D /* SREditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SREditor.swift; sourceTree = "<group>"; };
 		4BC99858BDF590DE8045C54F /* SRTicket.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SRTicket.swift; sourceTree = "<group>"; };
 		4D2A15BC438B7F98D802ED37 /* SRPreferences.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SRPreferences.swift; sourceTree = "<group>"; };
 		4D8FACC8271E3725530E4DE4 /* SwiftRight.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = SwiftRight.entitlements; sourceTree = "<group>"; };
 		4FEB80F52100A0557047743E /* SRCommandEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SRCommandEditorView.swift; sourceTree = "<group>"; };
 		513B890A1FE3A1B8D9210D69 /* SRCommandRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SRCommandRunner.swift; sourceTree = "<group>"; };
 		566717F5E913487D380CECBF /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
+		61A495D5F013D7806573FBDD /* SREditorCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SREditorCatalog.swift; sourceTree = "<group>"; };
 		63035CF38DA4CCDAEEA99208 /* SRRunSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SRRunSession.swift; sourceTree = "<group>"; };
 		67A90FE023627FEA622B014B /* SRTerminalTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SRTerminalTab.swift; sourceTree = "<group>"; };
 		6ADCB146689C8EA418DD022F /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
@@ -102,6 +107,7 @@
 		C613828D9E2C6C3785082A0D /* FinderExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = FinderExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		CCE637E6B82F3B4676248BBE /* SRWindowManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SRWindowManager.swift; sourceTree = "<group>"; };
 		D2C1590133A9BFDAC9F3A226 /* SRMainMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SRMainMenu.swift; sourceTree = "<group>"; };
+		D765A3EF5919728DB3D231C0 /* SREditorTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SREditorTab.swift; sourceTree = "<group>"; };
 		EA95611080D146A7C95C090B /* SRAppModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SRAppModel.swift; sourceTree = "<group>"; };
 		EC8DBDD1995D0562BE3F03F0 /* SRScriptEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SRScriptEditor.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -143,6 +149,7 @@
 				34063541DA9D02E8EE00D701 /* OutputWindowView.swift */,
 				566717F5E913487D380CECBF /* RootView.swift */,
 				4FEB80F52100A0557047743E /* SRCommandEditorView.swift */,
+				D765A3EF5919728DB3D231C0 /* SREditorTab.swift */,
 				BB7A745ECD048BBD818B18C3 /* SRExtensionStatusBar.swift */,
 				EC8DBDD1995D0562BE3F03F0 /* SRScriptEditor.swift */,
 				974ABC296C24049A946537E9 /* SRSettingsView.swift */,
@@ -209,6 +216,8 @@
 				EA95611080D146A7C95C090B /* SRAppModel.swift */,
 				A220884B1733DD779F23DAB0 /* SRCommandDisplay.swift */,
 				513B890A1FE3A1B8D9210D69 /* SRCommandRunner.swift */,
+				408CDDBFC6B4C45C40EEC19D /* SREditor.swift */,
+				61A495D5F013D7806573FBDD /* SREditorCatalog.swift */,
 				D2C1590133A9BFDAC9F3A226 /* SRMainMenu.swift */,
 				4D2A15BC438B7F98D802ED37 /* SRPreferences.swift */,
 				63035CF38DA4CCDAEEA99208 /* SRRunSession.swift */,
@@ -330,6 +339,9 @@
 				A684D615D95908E097620DEE /* SRCommandEditorView.swift in Sources */,
 				F10B5E2A8C784DDA4ADC4E8E /* SRCommandRunner.swift in Sources */,
 				16EEDFA686BF03EAEF584ADA /* SRConfigStore.swift in Sources */,
+				E36840BEE728093DD23A76C0 /* SREditor.swift in Sources */,
+				1B5F9D63D304C3D5D9CFE051 /* SREditorCatalog.swift in Sources */,
+				1F9D52FC4F373309C6B8228B /* SREditorTab.swift in Sources */,
 				D69C168FC92137BC99AF2C81 /* SRExtensionStatusBar.swift in Sources */,
 				DD6582133A9AE8E7E0DB8F38 /* SRMainMenu.swift in Sources */,
 				C10394B099D740912CD9BF8A /* SRPaths.swift in Sources */,

@@ -19,6 +19,8 @@ struct SRSettingsView: View {
                 .tabItem { Label(L("菜单"), systemImage: "list.bullet.indent") }
             SRTerminalTab()
                 .tabItem { Label(L("终端"), systemImage: "terminal") }
+            SREditorTab()
+                .tabItem { Label(L("编辑器"), systemImage: "chevron.left.forwardslash.chevron.right") }
             SRConfigTab()
                 .tabItem { Label(L("配置"), systemImage: "doc.text") }
             SRExtensionTab()

@@ -6,6 +6,7 @@ struct RootView: View {
 
     @EnvironmentObject private var model: SRAppModel
     @ObservedObject private var catalog = SRTerminalCatalog.shared
+    @ObservedObject private var editors = SREditorCatalog.shared
 
     var body: some View {
         NavigationSplitView {
@@ -81,7 +82,7 @@ struct RootView: View {
 
                 if !catalog.terminals.isEmpty {
                     Divider()
-                    Section(L("在此处打开…")) {
+                    Section(L("在此处打开终端…")) {
                         ForEach(catalog.terminals) { terminal in
                             Button {
                                 model.addTerminalCommand(for: terminal)
@@ -95,9 +96,30 @@ struct RootView: View {
                             }
                         }
                     }
+                }
+
+                if !editors.editors.isEmpty {
                     Divider()
-                    Button(L("为全部终端创建")) {
+                    Section(L("在此处打开编辑器…")) {
+                        ForEach(editors.editors) { editor in
+                            Button {
+                                model.addEditorCommand(for: editor)
+                            } label: {
+                                if model.editorCommand(for: editor.id) != nil {
+                                    Label(editor.name, systemImage: "checkmark")
+                                } else {
+                                    Text(editor.name)
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if !catalog.terminals.isEmpty || !editors.editors.isEmpty {
+                    Divider()
+                    Button(L("为全部终端和编辑器创建")) {
                         model.addTerminalCommands(for: catalog.terminals)
+                        model.addEditorCommands(for: editors.editors)
                     }
                 }
             } label: {

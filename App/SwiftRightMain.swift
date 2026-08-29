@@ -39,6 +39,7 @@ final class SRAppDelegate: NSObject, NSApplicationDelegate {
         // 提前建好终端清单。等到用户点「在终端中运行」才扫，
         // 第一次会白等一下；启动时扫完，设置页打开也是即时的。
         _ = SRTerminalCatalog.shared
+        _ = SREditorCatalog.shared
         installStatusItem()
         observeLanguageChanges()
 

@@ -252,9 +252,24 @@
 "该终端已不在列表中" = "no longer in the list";
 "管理…" = "Manage…";
 "空白命令" = "Blank Command";
-"在此处打开…" = "Open here with…";
-"为全部终端创建" = "Create for All Terminals";
 "在此处打开 %@" = "Open %@ here";
 "加到菜单" = "Add to Menu";
 "已在菜单中" = "In Menu";
 "生成一条「在此处打开 %@」的右键命令" = "Create an “Open %@ here” context-menu command";
+
+/* MARK: - 设置：编辑器 */
+"编辑器" = "Editors";
+"扫描本机编辑器" = "Scan for Editors";
+"为全部创建" = "Create for All";
+"在此处打开终端…" = "Open terminal here…";
+"在此处打开编辑器…" = "Open editor here…";
+"为全部终端和编辑器创建" = "Create for All Terminals and Editors";
+"没有发现新编辑器。" = "No new editors found.";
+"菜单里已经都有了。" = "They are all in the menu already.";
+"新增 %@ 条右键命令。" = "Added %@ context-menu commands.";
+"选择编辑器应用" = "Choose an editor app";
+"工程" = "project";
+"可开工程" = "Opens folders";
+"能把文件夹当工程打开" = "Can open a folder as a project";
+"「加到菜单」会生成一条 open -b <bundle id> 的命令，按 bundle id 打开，应用升级搬家都不会失效。" = "Add to Menu generates an open -b <bundle id> command. Opening by bundle id keeps working after the app is updated or moved.";
+"标着「工程」的编辑器能把文件夹当工程打开，生成的命令对文件和文件夹都生效；其余只对文件生效。判断不对的话可以在每一行里改。" = "Editors tagged “project” can open a folder as a project, so their command applies to both files and folders; the rest apply to files only. Toggle it per row if a guess is wrong.";

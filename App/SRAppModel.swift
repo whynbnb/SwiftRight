@@ -176,6 +176,57 @@ final class SRAppModel: ObservableObject {
         return added
     }
 
+    // MARK: - 从编辑器生成命令
+
+    /// 生成的编辑器命令长这样，用它反查是否已经建过。
+    private func editorScript(for id: String) -> String {
+        // 用 -b 按 bundle id 打开，而不是写死路径：
+        // 应用升级、搬家、换盘都不会让这条命令失效。
+        "open -b '\(id)' {paths}"
+    }
+
+    func editorCommand(for editorID: String) -> SRCommand? {
+        let script = editorScript(for: editorID)
+        return commands.first { $0.script == script }
+    }
+
+    /// 为某个编辑器生成一条「在此处打开」命令。
+    ///
+    /// 编辑器不需要像终端那样单开一种运行方式 —— 一条后台命令就够了，
+    /// 而且脚本内容对用户完全透明，想改随时能改。
+    @discardableResult
+    func addEditorCommand(for editor: SREditor) -> UUID {
+        if let existing = editorCommand(for: editor.id) {
+            selection = existing.id
+            return existing.id
+        }
+
+        var command = SRCommand()
+        command.title = L("在此处打开 %@", editor.name)
+        command.symbol = "chevron.left.forwardslash.chevron.right"
+        command.runMode = .background
+        command.script = editorScript(for: editor.id)
+        // 直接把选中的东西丢给编辑器就行：点文件夹开文件夹，点文件开文件，
+        // 空白处右键则是当前窗口这个文件夹。不必像终端那样绕工作目录。
+        command.appliesTo = editor.opensFolders ? .any : .filesOnly
+        command.allowsMultipleSelection = true
+        command.sortIndex = commands.count
+
+        commands.append(command)
+        selection = command.id
+        return command.id
+    }
+
+    @discardableResult
+    func addEditorCommands(for editors: [SREditor]) -> Int {
+        var added = 0
+        for editor in editors where editorCommand(for: editor.id) == nil {
+            addEditorCommand(for: editor)
+            added += 1
+        }
+        return added
+    }
+
     func delete(_ id: UUID) {
         guard let index = commands.firstIndex(where: { $0.id == id }) else { return }
         commands.remove(at: index)
