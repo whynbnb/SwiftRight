@@ -78,6 +78,11 @@ final class SRPreferences: ObservableObject {
         didSet { defaults.set(openOutputOnFailure, forKey: Keys.openOutputOnFailure) }
     }
 
+    /// 「在终端中运行」结束后，是否接一个交互式 shell 把窗口留住。
+    @Published var keepTerminalOpen: Bool {
+        didSet { defaults.set(keepTerminalOpen, forKey: Keys.keepTerminalOpen) }
+    }
+
     /// AppKit 那几处菜单是命令式搭出来的，语言变了得重建，靠这个通知。
     let languageDidChange = PassthroughSubject<Void, Never>()
 
@@ -88,12 +93,14 @@ final class SRPreferences: ObservableObject {
         static let language = "preferredLanguage"
         static let theme = "preferredTheme"
         static let openOutputOnFailure = "openOutputOnFailure"
+        static let keepTerminalOpen = "keepTerminalOpen"
     }
 
     private init() {
         language = SRLanguage(rawValue: defaults.string(forKey: Keys.language) ?? "") ?? .system
         theme = SRThemePreference(rawValue: defaults.string(forKey: Keys.theme) ?? "") ?? .system
         openOutputOnFailure = defaults.object(forKey: Keys.openOutputOnFailure) as? Bool ?? true
+        keepTerminalOpen = defaults.object(forKey: Keys.keepTerminalOpen) as? Bool ?? true
         resolveBundle()
     }
 

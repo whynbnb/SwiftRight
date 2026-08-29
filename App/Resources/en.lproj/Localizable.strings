@@ -217,3 +217,33 @@
 "执行完成" = "Completed";
 "确定要执行「%@」吗？" = "Run “%@”?";
 "将作用于 %@ 个项目：" = "This will act on %@ items:";
+
+/* MARK: - 设置：终端 */
+"终端" = "Terminal";
+"扫描本机终端" = "Scan for Terminals";
+"手动添加…" = "Add Manually…";
+"共 %@ 个" = "%@ found";
+"「在终端中运行」的命令会交给这里选中的终端。" = "Commands set to “Run in Terminal” are handed to whichever terminal is selected here.";
+"各家终端的命令行约定不同，SwiftRight 为常见终端内置了启动配方。扫描到清单之外的应用时会退回到「用脚本文件打开」，能不能用请点「测试」验证。" = "Terminals disagree on command-line conventions, so SwiftRight ships launch recipes for the common ones. Anything found outside that list falls back to “Open as script file” — hit Test to see whether it works.";
+"没有发现新终端。" = "No new terminals found.";
+"新增 %@ 个：" = "Added %@: ";
+"%@ 个更新了路径。" = "%@ had their path updated.";
+"移除已不存在的：" = "Removed (no longer installed): ";
+"已添加 %@。" = "Added %@.";
+"这个应用没有 bundle identifier，无法添加。" = "That app has no bundle identifier, so it can't be added.";
+"选择终端应用" = "Choose a terminal app";
+"添加" = "Add";
+"无内置配方" = "no recipe";
+"测试" = "Test";
+"调整启动参数" = "Adjust launch arguments";
+"启动方式" = "Launch style";
+"用脚本文件打开" = "Open as script file";
+"传命令行参数" = "Pass command-line arguments";
+"参数模板" = "Argument template";
+"可用占位符：{dir} 工作目录、{shell} 解释器、{script} 脚本路径。按空格分词后再替换，所以路径里有空格也不会被拆开。" = "Placeholders: {dir} working directory, {shell} interpreter, {script} script path. Tokenised on spaces before substitution, so paths containing spaces stay in one argument.";
+"把生成的脚本当作文档交给这个应用打开。终端需要声明自己能处理 shell 脚本才有效。" = "Hands the generated script to this app as a document. Only works if the terminal declares it can open shell scripts.";
+"恢复内置配方" = "Restore Built-in Recipe";
+"从列表移除" = "Remove from List";
+"看到这段文字说明这个终端的启动配方是对的。" = "If you can read this, the launch recipe for this terminal works.";
+"命令结束后保持终端打开" = "Keep the terminal open after the command finishes";
+"kitty、WezTerm、Ghostty、rio 这类终端在命令退出时会连窗口一起关掉，短命令基本一闪而过。打开这项会在命令末尾接一个交互式 shell，并打印退出码。" = "kitty, WezTerm, Ghostty and rio close the window as soon as the command exits, so short commands just flash past. With this on, an interactive shell is appended after the command and the exit code is printed.";

@@ -199,11 +199,24 @@ final class SRCommandRunner: ObservableObject {
         }
 
         let shell = command.shell.isEmpty ? "/bin/zsh" : command.shell
+
+        // 现代终端（kitty / WezTerm / Ghostty / rio / Alacritty）用 -e 方式启动时，
+        // 命令一退出窗口就跟着关。`ls` 这种秒完的命令会一闪而过，等于什么都没看见。
+        // 所以默认在末尾接一个交互式 shell 把窗口留住，顺便报出退出码。
+        let tail = SRPreferences.shared.keepTerminalOpen ? """
+
+
+        __sr_status=$?
+        echo
+        echo "[SwiftRight] exit $__sr_status"
+        exec "$SHELL" -i
+        """ : ""
+
         let body = """
         #!\(shell)
         cd \(workDir.shellQuoted)
         \(exports)
-        \(script)
+        \(script)\(tail)
         """
 
         do {
@@ -217,17 +230,95 @@ final class SRCommandRunner: ObservableObject {
         let configuration = NSWorkspace.OpenConfiguration()
         configuration.activates = true
 
-        if let terminal = NSWorkspace.shared.urlForApplication(withBundleIdentifier: "com.apple.Terminal") {
-            NSWorkspace.shared.open([file], withApplicationAt: terminal, configuration: configuration) { _, error in
-                if let error {
-                    DispatchQueue.main.async {
-                        self.presentError(L("无法启动终端：") + error.localizedDescription)
-                    }
-                }
+        guard let terminal = SRTerminalCatalog.shared.selected, terminal.exists else {
+            // 一个终端都没有的机器不存在，但配置被删空是可能的，退回系统 Terminal。
+            openWithSystemTerminal(file, configuration: configuration)
+            return
+        }
+        launch(terminal: terminal, scriptAt: file, workDir: workDir,
+               shell: shell, configuration: configuration)
+    }
+
+    /// 按终端自己的配方把脚本跑起来。
+    ///
+    /// 两种方式的差别不只是参数：`.openScript` 是把脚本当文档交给应用打开，
+    /// `.arguments` 是新起一个实例并把命令行传进去。现代终端只认后者。
+    private func launch(terminal: SRTerminal,
+                        scriptAt file: URL,
+                        workDir: String,
+                        shell: String,
+                        configuration: NSWorkspace.OpenConfiguration) {
+
+        let onError: (Error?) -> Void = { error in
+            guard let error else { return }
+            DispatchQueue.main.async {
+                self.presentError(L("无法启动终端：") + error.localizedDescription)
             }
+        }
+
+        switch terminal.launchStyle {
+        case .openScript:
+            NSWorkspace.shared.open([file],
+                                    withApplicationAt: terminal.url,
+                                    configuration: configuration) { _, error in onError(error) }
+
+        case .arguments:
+            configuration.arguments = terminal.arguments(script: file.path,
+                                                         directory: workDir,
+                                                         shell: shell)
+            // createsNewApplicationInstance 对应 `open -n`。
+            // 不加的话，终端已经开着时参数会被直接丢弃，什么都不会发生。
+            configuration.createsNewApplicationInstance = true
+            NSWorkspace.shared.openApplication(at: terminal.url,
+                                               configuration: configuration) { _, error in
+                onError(error)
+            }
+        }
+    }
+
+    private func openWithSystemTerminal(_ file: URL,
+                                        configuration: NSWorkspace.OpenConfiguration) {
+        if let terminal = NSWorkspace.shared.urlForApplication(
+            withBundleIdentifier: "com.apple.Terminal"
+        ) {
+            NSWorkspace.shared.open([file], withApplicationAt: terminal, configuration: configuration)
         } else {
             NSWorkspace.shared.open(file)
         }
+    }
+
+    /// 设置里的「测试」：拿这一项自己的配方开一个终端，跑一句能一眼看出成败的命令。
+    func testTerminal(_ terminal: SRTerminal) {
+        SRPaths.ensureDirectories()
+        let file = SRPaths.scratchDirectory
+            .appendingPathComponent("SwiftRight-test-\(UUID().uuidString.prefix(8)).command")
+        // 这里不看 keepTerminalOpen 设置：测试的全部意义就是让人看见输出，
+        // 窗口一闪而过等于没测。
+        let body = """
+        #!/bin/zsh
+        echo "SwiftRight → \(terminal.name)"
+        echo "\(L("工作目录")): $PWD"
+        echo
+        echo "\(L("看到这段文字说明这个终端的启动配方是对的。"))"
+        echo
+        exec "$SHELL" -i
+        """
+        do {
+            try body.write(to: file, atomically: true, encoding: .utf8)
+            try FileManager.default.setAttributes([.posixPermissions: 0o755],
+                                                  ofItemAtPath: file.path)
+        } catch {
+            presentError(L("无法生成终端脚本：") + error.localizedDescription)
+            return
+        }
+
+        let configuration = NSWorkspace.OpenConfiguration()
+        configuration.activates = true
+        launch(terminal: terminal,
+               scriptAt: file,
+               workDir: SRPaths.realHome.path,
+               shell: "/bin/zsh",
+               configuration: configuration)
     }
 
     // MARK: - 环境与工作目录

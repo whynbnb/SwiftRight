@@ -17,13 +17,15 @@ struct SRSettingsView: View {
                 .tabItem { Label(L("通用"), systemImage: "gearshape") }
             SRMenuAppearanceTab()
                 .tabItem { Label(L("菜单"), systemImage: "list.bullet.indent") }
+            SRTerminalTab()
+                .tabItem { Label(L("终端"), systemImage: "terminal") }
             SRConfigTab()
                 .tabItem { Label(L("配置"), systemImage: "doc.text") }
             SRExtensionTab()
                 .tabItem { Label(L("扩展"), systemImage: "puzzlepiece.extension") }
         }
         .padding(20)
-        .frame(width: 560, height: 480)
+        .frame(width: 600, height: 520)
     }
 }
 
