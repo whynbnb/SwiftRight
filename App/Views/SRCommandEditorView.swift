@@ -5,6 +5,7 @@ struct SRCommandEditorView: View {
 
     @Binding var command: SRCommand
     @EnvironmentObject private var model: SRAppModel
+    @ObservedObject private var catalog = SRTerminalCatalog.shared
 
     @State private var pendingInsertion: String?
     @State private var extensionsText: String = ""
@@ -153,6 +154,10 @@ struct SRCommandEditorView: View {
             }
             .pickerStyle(.radioGroup)
 
+            if command.runMode == .terminal {
+                terminalPicker
+            }
+
             Picker(L("工作目录"), selection: $command.workingDirectory) {
                 ForEach(SRWorkingDirectory.allCases) { Text($0.displayName).tag($0) }
             }
@@ -173,7 +178,45 @@ struct SRCommandEditorView: View {
         }
     }
 
-    // MARK: - 适用范围
+    // MARK: - 终端选择
+
+    /// 让这条命令单独指定终端。留空则跟随设置里的全局默认。
+    @ViewBuilder
+    private var terminalPicker: some View {
+        LabeledContent(L("使用终端")) {
+            HStack(spacing: 6) {
+                Picker("", selection: $command.terminalID) {
+                    Text(L("跟随全局设置") + globalTerminalSuffix).tag("")
+                    if !catalog.terminals.isEmpty {
+                        Divider()
+                        ForEach(catalog.terminals) { terminal in
+                            Text(terminal.name).tag(terminal.id)
+                        }
+                    }
+                }
+                .labelsHidden()
+                .fixedSize()
+
+                // 这条命令指定的终端被卸载了的话，得让用户看见，
+                // 否则运行时会静默回落到全局默认，很难察觉。
+                if !command.terminalID.isEmpty,
+                   catalog.terminals.first(where: { $0.id == command.terminalID }) == nil {
+                    Label(L("该终端已不在列表中"), systemImage: "exclamationmark.triangle.fill")
+                        .font(.caption)
+                        .foregroundStyle(.orange)
+                }
+
+                Button(L("管理…")) { SRWindowManager.shared.showSettings() }
+                    .buttonStyle(.link)
+                    .font(.caption)
+            }
+        }
+    }
+
+    private var globalTerminalSuffix: String {
+        guard let name = catalog.selected?.name else { return "" }
+        return "（\(name)）"
+    }
 
     private var scopeSection: some View {
         SRSection(L("适用范围")) {

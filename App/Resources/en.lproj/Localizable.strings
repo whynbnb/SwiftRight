@@ -247,3 +247,7 @@
 "看到这段文字说明这个终端的启动配方是对的。" = "If you can read this, the launch recipe for this terminal works.";
 "命令结束后保持终端打开" = "Keep the terminal open after the command finishes";
 "kitty、WezTerm、Ghostty、rio 这类终端在命令退出时会连窗口一起关掉，短命令基本一闪而过。打开这项会在命令末尾接一个交互式 shell，并打印退出码。" = "kitty, WezTerm, Ghostty and rio close the window as soon as the command exits, so short commands just flash past. With this on, an interactive shell is appended after the command and the exit code is printed.";
+"使用终端" = "Terminal";
+"跟随全局设置" = "Use global default";
+"该终端已不在列表中" = "no longer in the list";
+"管理…" = "Manage…";

@@ -63,6 +63,12 @@ struct SRCommand: Codable, Identifiable, Hashable {
     var shellArguments: [String] = ["-c"]
 
     var runMode: SRRunMode = .background
+    /// `runMode == .terminal` 时用哪个终端，存 bundle identifier。
+    /// 留空表示跟随设置里的全局默认终端。
+    ///
+    /// 这里只存 ID 不存整个终端对象：终端清单是 App 独有的，
+    /// 而这个结构体要能被沙盒扩展一起编译。
+    var terminalID: String = ""
     var workingDirectory: SRWorkingDirectory = .selectionParent
     /// workingDirectory == .custom 时使用。
     var customWorkingDirectory: String = ""
@@ -89,7 +95,7 @@ struct SRCommand: Codable, Identifiable, Hashable {
     // 旧版本配置里可能缺字段，给全部非必需字段兜底。
     enum CodingKeys: String, CodingKey {
         case id, title, symbol, group, script, shell, shellArguments
-        case runMode, workingDirectory, customWorkingDirectory
+        case runMode, terminalID, workingDirectory, customWorkingDirectory
         case appliesTo, fileExtensions, allowsMultipleSelection, runOncePerItem
         case isEnabled, confirmBeforeRun, notifyOnFinish, timeoutSeconds, sortIndex
     }
@@ -106,6 +112,7 @@ struct SRCommand: Codable, Identifiable, Hashable {
         shell = try c.decodeIfPresent(String.self, forKey: .shell) ?? "/bin/zsh"
         shellArguments = try c.decodeIfPresent([String].self, forKey: .shellArguments) ?? ["-c"]
         runMode = try c.decodeIfPresent(SRRunMode.self, forKey: .runMode) ?? .background
+        terminalID = try c.decodeIfPresent(String.self, forKey: .terminalID) ?? ""
         workingDirectory = try c.decodeIfPresent(SRWorkingDirectory.self, forKey: .workingDirectory) ?? .selectionParent
         customWorkingDirectory = try c.decodeIfPresent(String.self, forKey: .customWorkingDirectory) ?? ""
         appliesTo = try c.decodeIfPresent(SRSelectionKind.self, forKey: .appliesTo) ?? .any

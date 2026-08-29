@@ -230,13 +230,25 @@ final class SRCommandRunner: ObservableObject {
         let configuration = NSWorkspace.OpenConfiguration()
         configuration.activates = true
 
-        guard let terminal = SRTerminalCatalog.shared.selected, terminal.exists else {
+        guard let terminal = resolveTerminal(for: command) else {
             // 一个终端都没有的机器不存在，但配置被删空是可能的，退回系统 Terminal。
             openWithSystemTerminal(file, configuration: configuration)
             return
         }
         launch(terminal: terminal, scriptAt: file, workDir: workDir,
                shell: shell, configuration: configuration)
+    }
+
+    /// 命令自己指定的终端优先；没指定、或者指定的那个已经被卸载，就用全局默认。
+    private func resolveTerminal(for command: SRCommand) -> SRTerminal? {
+        let catalog = SRTerminalCatalog.shared
+        if !command.terminalID.isEmpty,
+           let pinned = catalog.terminals.first(where: { $0.id == command.terminalID }),
+           pinned.exists {
+            return pinned
+        }
+        guard let fallback = catalog.selected, fallback.exists else { return nil }
+        return fallback
     }
 
     /// 按终端自己的配方把脚本跑起来。
