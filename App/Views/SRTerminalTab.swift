@@ -145,6 +145,12 @@ private struct SRTerminalRow: View {
     let onToggleEdit: () -> Void
 
     @ObservedObject private var catalog = SRTerminalCatalog.shared
+    @ObservedObject private var model = SRAppModel.shared
+
+    /// 右键菜单里是否已经有指向这个终端的「在此处打开」。
+    private var hasCommand: Bool {
+        model.terminalCommand(for: terminal.id) != nil
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -202,6 +208,13 @@ private struct SRTerminalRow: View {
                 SRCommandRunner.shared.testTerminal(terminal)
             }
             .controlSize(.small)
+
+            Button(hasCommand ? L("已在菜单中") : L("加到菜单")) {
+                SRAppModel.shared.addTerminalCommand(for: terminal)
+            }
+            .controlSize(.small)
+            .disabled(hasCommand)
+            .help(L("生成一条「在此处打开 %@」的右键命令", terminal.name))
 
             Button {
                 onToggleEdit()

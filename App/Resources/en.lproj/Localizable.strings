@@ -251,3 +251,10 @@
 "跟随全局设置" = "Use global default";
 "该终端已不在列表中" = "no longer in the list";
 "管理…" = "Manage…";
+"空白命令" = "Blank Command";
+"在此处打开…" = "Open here with…";
+"为全部终端创建" = "Create for All Terminals";
+"在此处打开 %@" = "Open %@ here";
+"加到菜单" = "Add to Menu";
+"已在菜单中" = "In Menu";
+"生成一条「在此处打开 %@」的右键命令" = "Create an “Open %@ here” context-menu command";

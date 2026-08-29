@@ -5,6 +5,7 @@ import UniformTypeIdentifiers
 struct RootView: View {
 
     @EnvironmentObject private var model: SRAppModel
+    @ObservedObject private var catalog = SRTerminalCatalog.shared
 
     var body: some View {
         NavigationSplitView {
@@ -73,10 +74,36 @@ struct RootView: View {
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
         ToolbarItemGroup(placement: .navigation) {
-            Button {
-                model.addCommand()
+            // 主动作还是"新建空白命令"，点箭头才展开终端列表 ——
+            // 从已扫描的终端一键生成「在此处打开 kitty」这类命令。
+            Menu {
+                Button(L("空白命令")) { model.addCommand() }
+
+                if !catalog.terminals.isEmpty {
+                    Divider()
+                    Section(L("在此处打开…")) {
+                        ForEach(catalog.terminals) { terminal in
+                            Button {
+                                model.addTerminalCommand(for: terminal)
+                            } label: {
+                                // 已经建过的打个勾，省得重复点。
+                                if model.terminalCommand(for: terminal.id) != nil {
+                                    Label(terminal.name, systemImage: "checkmark")
+                                } else {
+                                    Text(terminal.name)
+                                }
+                            }
+                        }
+                    }
+                    Divider()
+                    Button(L("为全部终端创建")) {
+                        model.addTerminalCommands(for: catalog.terminals)
+                    }
+                }
             } label: {
                 Label(L("新建"), systemImage: "plus")
+            } primaryAction: {
+                model.addCommand()
             }
             .help(L("新建命令"))
 

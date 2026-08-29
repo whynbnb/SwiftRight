@@ -129,6 +129,53 @@ final class SRAppModel: ObservableObject {
         selection = copy.id
     }
 
+    // MARK: - 从终端生成命令
+
+    /// 已经有指向这个终端的「在此处打开」命令了吗。
+    func terminalCommand(for terminalID: String) -> SRCommand? {
+        commands.first { $0.runMode == .terminal && $0.terminalID == terminalID }
+    }
+
+    /// 为某个终端生成一条「在此处打开」命令。
+    ///
+    /// 已经有了就不重复添加，直接选中那一条 —— 重复的同名菜单项只会添乱。
+    @discardableResult
+    func addTerminalCommand(for terminal: SRTerminal) -> UUID {
+        if let existing = terminalCommand(for: terminal.id) {
+            selection = existing.id
+            return existing.id
+        }
+
+        var command = SRCommand()
+        command.title = L("在此处打开 %@", terminal.name)
+        command.symbol = terminal.id == "com.apple.Terminal" ? "apple.terminal" : "terminal"
+        command.runMode = .terminal
+        command.terminalID = terminal.id
+        // .selectionItself 三种情况都对：选中文件夹→进它，选中文件→进它所在目录，
+        // 空白处右键→当前窗口的文件夹。
+        command.workingDirectory = .selectionItself
+        // 终端脚本开头已经 cd 过了，这里只需要留一个登录 shell。
+        // 显式写出来是为了不依赖「命令结束后保持终端打开」那个开关。
+        command.script = "exec $SHELL -l"
+        command.allowsMultipleSelection = false
+        command.sortIndex = commands.count
+
+        commands.append(command)
+        selection = command.id
+        return command.id
+    }
+
+    /// 为清单里每个终端各生成一条，已存在的跳过。返回实际新增的条数。
+    @discardableResult
+    func addTerminalCommands(for terminals: [SRTerminal]) -> Int {
+        var added = 0
+        for terminal in terminals where terminalCommand(for: terminal.id) == nil {
+            addTerminalCommand(for: terminal)
+            added += 1
+        }
+        return added
+    }
+
     func delete(_ id: UUID) {
         guard let index = commands.firstIndex(where: { $0.id == id }) else { return }
         commands.remove(at: index)
