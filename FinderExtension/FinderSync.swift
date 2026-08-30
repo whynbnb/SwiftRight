@@ -259,15 +259,33 @@ final class FinderSync: FIFinderSync {
 
         do {
             let url = try SRTicket.write(ticket)
-            if !NSWorkspace.shared.open(url) {
+            deliver(url) { [weak self] delivered in
+                guard !delivered else { return }
                 // URL scheme 还没被 LaunchServices 认到。
-                launchHostApp(thenRetry: ticket)
+                self?.launchHostApp(thenRetry: ticket)
             }
         } catch {
             // 多半是 ~/Library/Application Support/SwiftRight/ 还不存在：
             // 沙盒例外只覆盖这个目录本身，建不了它的父目录，得靠 App 首次启动来创建。
             NSLog("[SwiftRight] 写入调用凭据失败，尝试拉起宿主 App: \(error.localizedDescription)")
             launchHostApp(thenRetry: ticket)
+        }
+    }
+
+    /// 把凭据投递给主 App。
+    ///
+    /// 关键是 `activates = false`。单参数的 `NSWorkspace.open(url)` 内部固定
+    /// 会把目标 App 激活到前台 —— 那是 LaunchServices 打开 URL 的默认行为，
+    /// 和双击文件把对应 App 拉到前台是同一套逻辑，没有余地可调。
+    ///
+    /// 但 SwiftRight 在这里只是收凭据、在后台跑命令，被拉到前台纯属副作用：
+    /// 主窗口开着时会看到它抢一下焦点再让给 VS Code，没开窗口时 accessory
+    /// 状态的它也会顶掉菜单栏。真正该拿到前台的是命令自己拉起来的那些 App。
+    private func deliver(_ url: URL, completion: @escaping (Bool) -> Void) {
+        let configuration = NSWorkspace.OpenConfiguration()
+        configuration.activates = false
+        NSWorkspace.shared.open(url, configuration: configuration) { _, error in
+            completion(error == nil)
         }
     }
 
@@ -297,7 +315,10 @@ final class FinderSync: FIFinderSync {
                     NSLog("[SwiftRight] 重试写入凭据仍然失败")
                     return
                 }
-                NSWorkspace.shared.open(url)
+                // 重试这一路同样不激活，理由见 deliver(_:completion:)。
+                self.deliver(url) { delivered in
+                    if !delivered { NSLog("[SwiftRight] 重试投递凭据失败") }
+                }
             }
         }
     }
