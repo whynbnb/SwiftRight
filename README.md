@@ -2,9 +2,15 @@
 
 [简体中文](README.zh-CN.md)
 
+> Vibe-coded with Claude Opus 5.
+
 A Finder context-menu extension for macOS. Define any shell command in a GUI and it shows up when you right-click, acting on whatever is selected.
 
 Built with Swift / SwiftUI / Xcode. No third-party dependencies.
+
+<img src="docs/Right.png" width="420" alt="SwiftRight in Finder's context menu">
+
+![The command manager](docs/Main.png)
 
 ---
 

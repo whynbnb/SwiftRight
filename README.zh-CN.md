@@ -2,9 +2,15 @@
 
 [English](README.md)
 
+> 由 Claude Opus 5 Vibe Coding 而成。
+
 macOS 访达（Finder）右键菜单扩展。在图形界面里定义任意 shell 命令，它们会立刻出现在右键菜单中，作用于当前选中的文件。
 
 用 Swift / SwiftUI / Xcode 构建，无第三方依赖。
+
+<img src="docs/Right.png" width="420" alt="访达右键菜单里的 SwiftRight">
+
+![命令管理界面](docs/Main.png)
 
 ---
 
