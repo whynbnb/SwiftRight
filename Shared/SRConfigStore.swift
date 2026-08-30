@@ -8,7 +8,7 @@ final class SRConfigStore {
 
     static let shared = SRConfigStore()
 
-    private let queue = DispatchQueue(label: "com.swiftright.configstore")
+    private let queue = DispatchQueue(label: "me.whynbnb.configstore")
     private var cached: SRConfig?
     private var cachedModificationDate: Date?
 

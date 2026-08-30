@@ -16,6 +16,7 @@
 		11CE75175D722CC3DCEB25D1 /* UserNotifications.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A7BF3955F485DD345402C9BB /* UserNotifications.framework */; };
 		1236EBE1870F06FE370EE9AC /* SRTicket.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BC99858BDF590DE8045C54F /* SRTicket.swift */; };
 		16EEDFA686BF03EAEF584ADA /* SRConfigStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A75813CF0FB8797010FACB3 /* SRConfigStore.swift */; };
+		1919BBCE730F8B8E69FCEDC7 /* SRAboutView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A42CD99723DF94772BB8346 /* SRAboutView.swift */; };
 		1B5F9D63D304C3D5D9CFE051 /* SREditorCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61A495D5F013D7806573FBDD /* SREditorCatalog.swift */; };
 		1ED93313953A7C31977B447A /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 566717F5E913487D380CECBF /* RootView.swift */; };
 		1F9D52FC4F373309C6B8228B /* SREditorTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = D765A3EF5919728DB3D231C0 /* SREditorTab.swift */; };
@@ -76,6 +77,7 @@
 
 /* Begin PBXFileReference section */
 		0451571C94F43C4DB36C59CA /* SRTerminal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SRTerminal.swift; sourceTree = "<group>"; };
+		1A42CD99723DF94772BB8346 /* SRAboutView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SRAboutView.swift; sourceTree = "<group>"; };
 		1DADA3E0294DF4AAF74453C3 /* SRTemplateTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SRTemplateTab.swift; sourceTree = "<group>"; };
 		229C4BB81C3CADB888E234A8 /* SRTerminalCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SRTerminalCatalog.swift; sourceTree = "<group>"; };
 		22CD14746B42C16B4D63D233 /* SRPaths.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SRPaths.swift; sourceTree = "<group>"; };
@@ -154,6 +156,7 @@
 			children = (
 				34063541DA9D02E8EE00D701 /* OutputWindowView.swift */,
 				566717F5E913487D380CECBF /* RootView.swift */,
+				1A42CD99723DF94772BB8346 /* SRAboutView.swift */,
 				4FEB80F52100A0557047743E /* SRCommandEditorView.swift */,
 				D765A3EF5919728DB3D231C0 /* SREditorTab.swift */,
 				BB7A745ECD048BBD818B18C3 /* SRExtensionStatusBar.swift */,
@@ -342,6 +345,7 @@
 			files = (
 				C9C9077AFB8733216EE95F86 /* OutputWindowView.swift in Sources */,
 				1ED93313953A7C31977B447A /* RootView.swift in Sources */,
+				1919BBCE730F8B8E69FCEDC7 /* SRAboutView.swift in Sources */,
 				0B1F243404FB0C2ABCE19003 /* SRAppModel.swift in Sources */,
 				0CBF8ABCDAEF505DEE776B26 /* SRCommand.swift in Sources */,
 				63CAE7CC06BE5F26CA5850F8 /* SRCommandDisplay.swift in Sources */,
@@ -415,7 +419,7 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				INFOPLIST_FILE = FinderExtension/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @executable_path/../../../../Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = com.swiftright.SwiftRight.FinderExtension;
+				PRODUCT_BUNDLE_IDENTIFIER = me.whynbnb.SwiftRight.FinderExtension;
 				PRODUCT_NAME = FinderExtension;
 				SDKROOT = macosx;
 				SKIP_INSTALL = YES;
@@ -494,7 +498,7 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				INFOPLIST_FILE = FinderExtension/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @executable_path/../../../../Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = com.swiftright.SwiftRight.FinderExtension;
+				PRODUCT_BUNDLE_IDENTIFIER = me.whynbnb.SwiftRight.FinderExtension;
 				PRODUCT_NAME = FinderExtension;
 				SDKROOT = macosx;
 				SKIP_INSTALL = YES;
@@ -509,7 +513,7 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				INFOPLIST_FILE = App/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = com.swiftright.SwiftRight;
+				PRODUCT_BUNDLE_IDENTIFIER = me.whynbnb.SwiftRight;
 				PRODUCT_NAME = SwiftRight;
 				SDKROOT = macosx;
 			};
@@ -595,7 +599,7 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				INFOPLIST_FILE = App/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = com.swiftright.SwiftRight;
+				PRODUCT_BUNDLE_IDENTIFIER = me.whynbnb.SwiftRight;
 				PRODUCT_NAME = SwiftRight;
 				SDKROOT = macosx;
 			};

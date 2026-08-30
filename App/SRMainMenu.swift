@@ -34,8 +34,9 @@ enum SRMainMenu {
         let name = "SwiftRight"
         let menu = NSMenu(title: name)
 
+        // 走响应链到 SRAppDelegate，用自己的关于窗口而不是系统那个标准面板。
         append(to: menu, L("关于 SwiftRight"),
-               #selector(NSApplication.orderFrontStandardAboutPanel(_:)))
+               #selector(SRAppDelegate.showAboutFromMenu(_:)))
         menu.addItem(.separator())
 
         append(to: menu, L("设置…"),

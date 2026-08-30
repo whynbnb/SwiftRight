@@ -137,6 +137,7 @@ final class SRAppDelegate: NSObject, NSApplicationDelegate {
         add(L("重新载入配置"), #selector(reloadConfig))
         add(L("重启访达"), #selector(relaunchFinder))
         menu.addItem(.separator())
+        add(L("关于 SwiftRight"), #selector(showAbout))
         add(L("退出 SwiftRight"), #selector(quit), key: "q")
 
         statusItem?.menu = menu
@@ -145,12 +146,17 @@ final class SRAppDelegate: NSObject, NSApplicationDelegate {
     @objc private func showManager() { SRWindowManager.shared.showManager() }
     @objc private func showOutput() { SRWindowManager.shared.showOutput() }
     @objc private func showSettings() { SRWindowManager.shared.showSettings() }
+    @objc private func showAbout() { SRWindowManager.shared.showAbout() }
     @objc private func quit() { NSApp.terminate(nil) }
 
-    /// 主菜单里的「设置…」把 target 留空，靠响应链走到这里，
-    /// 所以这个方法不能是 private，签名也得带 sender。
+    /// 主菜单里的「设置…」「关于」把 target 留空，靠响应链走到这里，
+    /// 所以这两个方法不能是 private，签名也得带 sender。
     @objc func showSettingsFromMenu(_ sender: Any?) {
         SRWindowManager.shared.showSettings()
+    }
+
+    @objc func showAboutFromMenu(_ sender: Any?) {
+        SRWindowManager.shared.showAbout()
     }
 
     @objc private func reloadConfig() {

@@ -1,168 +1,213 @@
 # SwiftRight
 
-macOS 访达（Finder）右键菜单扩展。在图形界面里定义任意 shell 命令，它们会立刻出现在右键菜单中，作用于当前选中的文件。
+[简体中文](README.zh-CN.md)
 
-用 Swift / SwiftUI / Xcode 构建，无第三方依赖。
+A Finder context-menu extension for macOS. Define any shell command in a GUI and it shows up when you right-click, acting on whatever is selected.
+
+Built with Swift / SwiftUI / Xcode. No third-party dependencies.
 
 ---
 
-## 快速开始
+## Quick start
 
 ```bash
-swift Scripts/make-icon.swift   # 可选：生成 App 图标
-./Scripts/build.sh              # 生成工程 → 编译 → 安装到 /Applications → 注册扩展
+swift Scripts/make-icon.swift   # optional: generate the app icon
+./Scripts/build.sh              # generate project → build → install to /Applications → register
 ```
 
-然后：
+Then:
 
-1. 打开 `/Applications/SwiftRight.app`
-2. **系统设置 › 通用 › 登录项与扩展 › 访达扩展**，勾选 **SwiftRight**
-3. 在访达里右键任意文件
+1. Open `/Applications/SwiftRight.app`
+2. **System Settings › General › Login Items & Extensions › Finder extensions** — enable **SwiftRight**
+3. Right-click anything in Finder
 
-App 会常驻菜单栏（不占 Dock）。点菜单栏图标 → **管理命令…** 打开编辑器。
+The app lives in the menu bar (no Dock icon). Click its icon → **Manage Commands…**
 
-只想编译不安装：`./Scripts/build.sh build`
-想在 Xcode 里开发：`xcodegen generate && open SwiftRight.xcodeproj`
+Build without installing: `./Scripts/build.sh build`
+Develop in Xcode: `open SwiftRight.xcodeproj` (the project file is committed; `xcodegen` is only needed to regenerate it)
+
+**Does the app need to stay running?** No. The Finder extension is a separate process that reads the config directly; clicking a menu item launches the app on demand (measured at 0.25–0.40 s cold, 0.23–0.26 s warm). The only requirement is opening the app once after installing, so it can write its initial config.
 
 ---
 
-## 架构
+## Architecture
 
 ```
-Finder ──右键──▶ FinderExtension.appex  (沙盒)
-                        │  读 commands.json 拼菜单
-                        │  点击后写一张凭据，open swiftright://run?ticket=…
+Finder ──right-click──▶ FinderExtension.appex  (sandboxed)
+                        │  reads commands.json, builds the menu
+                        │  on click: writes a ticket, opens swiftright://run?ticket=…
                         ▼
-                 SwiftRight.app        (非沙盒)
-                        │  查凭据 → 展开占位符 → Process 执行
+                 SwiftRight.app                (not sandboxed)
+                        │  looks up the ticket → expands placeholders → Process
                         ▼
-                 后台 / 输出窗口 / 终端
+                 background / output window / terminal
 ```
 
-**为什么要拆成两个进程？**
+**Why two processes?**
 
-app extension 被系统强制沙盒，在扩展里 `Process` 起不了任何外部程序 —— 而"执行用户自定义命令"恰恰就是这个工具的全部意义。所以扩展只做菜单，执行放在非沙盒的主 App 里。
+App extensions are sandboxed by the system, and inside that sandbox `Process` cannot launch anything external — which is the entire point of this tool. So the extension only builds menus; execution lives in the non-sandboxed host app.
 
-两边通过 `~/Library/Application Support/SwiftRight/` 通信：
+The two sides communicate through `~/Library/Application Support/SwiftRight/`:
 
-| 文件 | 用途 |
+| File | Purpose |
 |---|---|
-| `commands.json` | 命令定义。App 写，扩展只读（按 mtime 缓存，改完立即生效，不用重启访达） |
-| `pending/<uuid>.json` | 一次性调用凭据。扩展写，App 读完即删 |
-| `scratch/` | 终端模式生成的临时 `.command` 脚本 |
+| `commands.json` | Command definitions. Written by the app, read by the extension (mtime-cached, so edits apply on the next right-click — no need to restart Finder) |
+| `pending/<uuid>.json` | One-shot invocation ticket. Written by the extension, consumed and deleted by the app |
+| `scratch/` | Temporary `.command` scripts for terminal mode |
 
-扩展靠 `FinderExtension.entitlements` 里的 `temporary-exception.files.home-relative-path.read-write` 拿到这一个目录的读写权限，范围精确到 SwiftRight 自己的目录。没有用 App Group，因此不依赖付费开发者账号。
+The extension reaches that one directory via a `temporary-exception.files.home-relative-path.read-write` entitlement, scoped to SwiftRight's own folder. **No App Group is used**, so no paid developer account is required.
 
-路径没有塞进 URL 而是走文件：多选几十个长路径很容易把 URL 撑爆，路径里的特殊字符做百分号编码也容易出错。
+Paths travel through a file rather than the URL: a multi-selection of long paths overflows a URL quickly, and percent-encoding path characters is error-prone.
+
+Matching logic in `Shared/` compiles into both targets, so what the menu shows and what can actually run never diverge.
 
 ---
 
-## 占位符
+## Placeholders
 
-脚本里的占位符**默认已做 shell 单引号转义**，路径含空格、引号、`$` 都不会出问题。需要原始文本时加 `:raw`（例如 `{paths:raw}`）。
+Placeholders are **shell-quoted by default**, so paths with spaces, quotes or `$` are safe. Append `:raw` for the unescaped text (e.g. `{paths:raw}`).
 
-| 占位符 | 含义 |
+| Placeholder | Meaning |
 |---|---|
-| `{path}` | 第一个选中项的完整路径 |
-| `{paths}` | 全部选中项，空格分隔 |
-| `{name}` | 文件名（含扩展名） |
-| `{names}` | 全部文件名 |
-| `{basename}` | 文件名（不含扩展名） |
-| `{ext}` | 扩展名，不含点 |
-| `{dir}` | 所在文件夹 |
-| `{target}` | 当前访达窗口对应的文件夹 |
-| `{count}` | 选中项数量 |
-| `{home}` | 用户主目录 |
-| `{date}` | 时间戳 `yyyyMMdd-HHmmss` |
+| `{path}` | Full path of the first selected item |
+| `{paths}` | All selected items, space-separated |
+| `{name}` | File name, with extension |
+| `{names}` | All file names |
+| `{basename}` | File name, without extension |
+| `{ext}` | Extension, without the dot |
+| `{dir}` | Containing folder |
+| `{target}` | The folder of the current Finder window |
+| `{count}` | Number of selected items |
+| `{home}` | Home directory |
+| `{date}` | Timestamp, `yyyyMMdd-HHmmss` |
 
-选中的路径**同时**作为位置参数传入，所以下面两种写法等价：
+Selected paths are **also** passed as positional arguments, so these are equivalent:
 
 ```bash
 zip -r out.zip {paths}
 zip -r out.zip "$@"
 ```
 
-还有一组环境变量：`SR_PATH` `SR_PATHS`（换行分隔）`SR_DIR` `SR_TARGET` `SR_NAME` `SR_BASENAME` `SR_EXT` `SR_COUNT` `SR_HOME`。
+Environment variables are set too: `SR_PATH` `SR_PATHS` (newline-separated) `SR_DIR` `SR_TARGET` `SR_NAME` `SR_BASENAME` `SR_EXT` `SR_COUNT` `SR_HOME`.
 
-脚本以 `#!` 开头时，会被写成临时可执行文件按 shebang 执行，命令里配置的解释器被忽略 —— 可以直接写 Python、Ruby、AppleScript。
+A script starting with `#!` is written to a temporary executable and run via its shebang, ignoring the configured interpreter — so you can write Python, Ruby or AppleScript directly.
 
-GUI 进程继承到的 `PATH` 通常很窄，执行前会自动补上 `/opt/homebrew/bin` 和 `/usr/local/bin`，brew 装的工具能直接用。
-
----
-
-## 命令选项
-
-- **运行方式** — 后台静默 / 显示输出窗口（实时流式 stdout+stderr）/ 在终端中运行
-- **工作目录** — 选中项所在文件夹 / 选中的文件夹本身 / 当前访达窗口 / 自定义（支持占位符）
-- **适用范围** — 仅文件 / 仅文件夹 / 都行，可再按扩展名过滤；不满足条件的命令直接不出现在菜单里
-- **分组** — 同名分组自动收成二级子菜单
-- **每项单独运行** — 多选时对每个文件各起一个进程，而不是一次性全传进去
-- **执行前确认** / **完成后通知** / **超时**（秒，0 为不限）
-- 全局可切换：命令平铺在右键菜单顶层，还是收进一个二级菜单
-
-编辑器里的**试运行**会弹出文件选择器让你挑几个文件当作"选中项"，立刻跑一次并显示输出 —— 不用切到访达反复试。
-
-后台命令失败时默认自动弹出输出窗口，否则静默失败很难排查（可在设置里关掉）。
+GUI processes inherit a narrow `PATH`, so `/opt/homebrew/bin` and `/usr/local/bin` are appended before running. Homebrew-installed tools just work.
 
 ---
 
-## 内置示例
+## Command options
 
-首次启动会写入 9 条示例命令，同时充当占位符用法的说明：在终端中打开、用 VS Code 打开、拷贝路径、拷贝文件名、计算 SHA-256、统计占用空间、压缩为 zip、转换为 PNG（`sips`，按扩展名过滤，逐个转换）、`git status`。
+- **Execution** — silent background / live output window (streaming stdout+stderr) / hand off to a terminal
+- **Working directory** — folder containing the selection / the selected folder itself / current Finder window / custom (placeholders allowed)
+- **Scope** — files only / folders only / both, plus an extension filter. Commands that don't match simply don't appear in the menu
+- **Group** — commands sharing a group name collapse into a submenu
+- **Run once per item** — spawn a process per selected file instead of passing them all at once
+- **Confirm before running** / **notify when finished** / **timeout** (seconds, 0 = none)
+- Globally switchable: commands flat in the context menu, or collected under one submenu
 
-都可以随意改删。设置里有"恢复示例命令"，是追加而不是覆盖。
+**Test Run** in the editor opens a file picker to stand in for the selection, runs once and shows the output — no switching to Finder to iterate.
+
+Failed background commands open the output window by default; otherwise silent failures are hard to diagnose (switchable in settings).
 
 ---
 
-## 常见问题
+## Generators
 
-**右键菜单里什么都没有**
+The toolbar `+` menu and the settings window can generate commands for you.
 
-按顺序排查：
+**Terminals.** Scans for installed terminals and generates *Open kitty here* style commands. Every terminal disagrees on command-line conventions, so launch recipes are built in and verified against each one's `--help`:
 
-1. App 是否在 `/Applications` 且至少打开过一次 —— 系统只登记这样的扩展
-2. 系统设置里是否勾选了 SwiftRight（App 侧边栏底部有实时状态灯）
+| Terminal | Arguments |
+|---|---|
+| Terminal / iTerm2 | `open -a <App> <script>` |
+| kitty | `--directory {dir} {shell} {script}` |
+| WezTerm | `start --cwd {dir} -- {shell} {script}` |
+| Ghostty | `--working-directory={dir} -e {shell} {script}` |
+| Rio | `--working-dir {dir} -e {shell} {script}` |
+| Alacritty | `--working-directory {dir} -e {shell} {script}` |
+
+Discovery beyond the built-in list filters on `CFBundleTypeRole == "Shell"` — apps declaring they *execute* shell scripts. Asking LaunchServices "who can open a shell script" instead pulls in Chrome, Notes, Pages and every text editor.
+
+kitty, WezTerm, Ghostty and Rio close the window as soon as the command exits, so short commands flash past. **Keep the terminal open** (on by default) appends an interactive shell and prints the exit code.
+
+**Editors.** Scans for installed editors and generates *Open Zed here* style commands. Unlike terminals these need no per-app recipe — `open -b <bundle id> <path>` works everywhere, and opening by bundle id survives the app being updated or moved.
+
+The one thing recorded per editor is whether it can open a folder as a project, which decides whether the command applies to folders. This cannot be read from `Info.plist`: VS Code, Zed and VSCodium declare `public.folder`, but the JetBrains IDEs and Qt Creator do not — yet all of them support it.
+
+**File templates.** Right-click a folder → **New File ▸** with a template, like Windows Explorer's *New*. Ships with Plain Text, Markdown, JSON, HTML, CSS, JavaScript, YAML, XML, Shell Script and Python; the last two get the executable bit. Name, default file name, extension, icon and initial contents are all editable, and you can add your own.
+
+The generated command is an ordinary script using a heredoc, so it stays readable and editable. Name collisions increment the way Finder does (`Untitled 2.md`). Afterwards the new file is revealed and selected in Finder — press Return to rename.
+
+---
+
+## Settings
+
+Open from the menu bar icon, or ⌘,
+
+- **General** — language (System / 简体中文 / English, applied instantly), theme (System / Light / Dark), behavior
+- **Menu** — context menu appearance
+- **Terminal** — scan, add manually, pick the default, adjust launch arguments per terminal, test one
+- **Editors** — scan, add manually, toggle folder support, add to menu
+- **New File** — manage templates
+- **Configuration** — export / import (append or replace), file location, restore examples
+- **Extension** — status and troubleshooting
+
+---
+
+## Troubleshooting
+
+**Nothing appears in the context menu**
+
+1. Is the app in `/Applications` and has it been opened at least once? Only then does the system register the extension
+2. Is SwiftRight enabled in System Settings? (the app's sidebar has a live status light)
 3. `killall Finder`
 
-侧边栏底部的 **?** 按钮里有"重新注册扩展 / 重启访达"两个按钮，对应 `pluginkit -a` 和 `killall Finder`。
+The **?** button at the bottom of the sidebar jumps to the same tools.
 
-**改了命令要重启访达吗**
+**Do I need to restart Finder after editing a command?**
 
-不用。扩展每次右键都会检查 `commands.json` 的修改时间，变了就重读。
+No. The extension checks `commands.json`'s modification time on every right-click.
 
-**签名**
+**Signing**
 
-`project.yml` 里的 `DEVELOPMENT_TEAM` 需要换成你自己的 Team ID：
+`DEVELOPMENT_TEAM` in `project.yml` needs to be your own team ID:
 
 ```bash
 security find-identity -v -p codesigning
 ```
 
-括号里的十位字符就是。改完重新 `xcodegen generate`。
+Note that the ten characters in parentheses of the certificate's common name are the *certificate* ID, not the team ID — read the `OU` field instead.
 
 ---
 
-## 目录结构
+## Layout
 
 ```
-project.yml                  XcodeGen 工程定义（.xcodeproj 是生成物，不入库）
-Shared/                      App 与扩展共享的代码
-  SRCommand.swift              命令模型 + 菜单匹配逻辑
-  SRConfigStore.swift          commands.json 读写 + 内置示例
-  SRPaths.swift                绕开沙盒容器的真实路径
-  SRPlaceholder.swift          占位符展开 + shell 转义
-  SRTicket.swift               扩展 → App 的一次性调用凭据
-App/                         主 App（非沙盒）
-  SwiftRightMain.swift         入口、菜单栏、URL 回调
-  SRCommandRunner.swift        Process 执行、环境、超时、终端模式
-  SRRunSession.swift           单次执行的可观察状态
-  SRAppModel.swift             界面数据源
-  SRWindowManager.swift        窗口 + 激活策略（.accessory ⇄ .regular）
-  SRMainMenu.swift             主菜单
-  Views/                       SwiftUI 界面
-FinderExtension/             访达扩展（沙盒）
-  FinderSync.swift             监视范围、菜单构建、点击转发
-Scripts/                     构建与图标生成
+project.yml                  XcodeGen definition (the .xcodeproj is committed too)
+Shared/                      compiled into both the app and the extension
+  SRCommand.swift              command model + menu matching
+  SRConfigStore.swift          commands.json I/O + built-in examples
+  SRPaths.swift                real paths, bypassing the sandbox container
+  SRPlaceholder.swift          placeholder expansion + shell quoting
+  SRTicket.swift               one-shot extension → app ticket
+App/                         host app (not sandboxed)
+  SwiftRightMain.swift         entry point, menu bar, URL callback
+  SRCommandRunner.swift        Process execution, environment, timeout, terminal modes
+  SRRunSession.swift           observable state of one run + incremental UTF-8 decoding
+  SRAppModel.swift             UI data source and command generators
+  SRPreferences.swift          language / theme / localization
+  SRTerminal*.swift            terminal catalog and launch recipes
+  SREditor*.swift              editor catalog
+  SRFileTemplate.swift         new-file templates
+  Views/                       SwiftUI
+FinderExtension/             Finder extension (sandboxed)
+  FinderSync.swift             monitored scope, menu building, click forwarding
+Scripts/                     build and icon generation
 ```
 
-`Shared/` 下的文件同时编译进两个 target，菜单显示条件和实际执行条件因此永远一致 —— 不会出现"菜单里有但点了没反应"。
+---
+
+## License
+
+[MIT](LICENSE)

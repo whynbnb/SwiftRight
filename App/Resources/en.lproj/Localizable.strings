@@ -299,3 +299,10 @@
 "在此处打开终端" = "Open terminal here";
 "在此处打开编辑器" = "Open editor here";
 "全部添加" = "Add All";
+
+/* MARK: - 关于 */
+"访达右键菜单扩展 · 自定义命令 / 终端 / 编辑器 / 新建文件" = "Finder context-menu extension · custom commands / terminals / editors / new files";
+"版本" = "Version";
+"包名" = "Bundle ID";
+"仓库" = "Repository";
+"开源协议" = "License";

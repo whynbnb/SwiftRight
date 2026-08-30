@@ -67,7 +67,7 @@ pluginkit -a "$DEST/Contents/PlugIns/FinderExtension.appex" 2>/dev/null || true
 sleep 1
 
 ACTIVE=$(pluginkit -m -p com.apple.FinderSync -vvv 2>/dev/null \
-         | grep -A1 "com.swiftright" | grep "Path =" | sed 's/.*Path = //')
+         | grep -A1 "me.whynbnb" | grep "Path =" | sed 's/.*Path = //')
 if [ "$ACTIVE" = "$DEST/Contents/PlugIns/FinderExtension.appex" ]; then
   echo "    生效的扩展: $ACTIVE ✓"
 else

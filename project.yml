@@ -1,7 +1,7 @@
 name: SwiftRight
 
 options:
-  bundleIdPrefix: com.swiftright
+  bundleIdPrefix: me.whynbnb
   createIntermediateGroups: true
   deploymentTarget:
     macOS: "14.0"
@@ -32,7 +32,7 @@ targets:
       - path: Shared
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.swiftright.SwiftRight
+        PRODUCT_BUNDLE_IDENTIFIER: me.whynbnb.SwiftRight
         PRODUCT_NAME: SwiftRight
         INFOPLIST_FILE: App/Info.plist
         CODE_SIGN_ENTITLEMENTS: App/SwiftRight.entitlements
@@ -57,7 +57,7 @@ targets:
       - path: Shared
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.swiftright.SwiftRight.FinderExtension
+        PRODUCT_BUNDLE_IDENTIFIER: me.whynbnb.SwiftRight.FinderExtension
         PRODUCT_NAME: FinderExtension
         INFOPLIST_FILE: FinderExtension/Info.plist
         CODE_SIGN_ENTITLEMENTS: FinderExtension/FinderExtension.entitlements

@@ -13,13 +13,14 @@ final class SRWindowManager: NSObject, NSWindowDelegate {
     private var managerWindow: NSWindow?
     private var outputWindow: NSWindow?
     private var settingsWindow: NSWindow?
+    private var aboutWindow: NSWindow?
 
     private override init() {
         super.init()
     }
 
     private var allWindows: [NSWindow] {
-        [managerWindow, outputWindow, settingsWindow].compactMap { $0 }
+        [managerWindow, outputWindow, settingsWindow, aboutWindow].compactMap { $0 }
     }
 
     // MARK: - 主窗口
@@ -93,6 +94,35 @@ final class SRWindowManager: NSObject, NSWindowDelegate {
         present(window)
     }
 
+    // MARK: - 关于
+
+    func showAbout() {
+        if let aboutWindow {
+            present(aboutWindow)
+            return
+        }
+
+        // 内容是固定尺寸的，高度让 SwiftUI 自己撑，所以不给缩放也不给最小化。
+        let window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 420, height: 460),
+            styleMask: [.titled, .closable],
+            backing: .buffered,
+            defer: false
+        )
+        window.title = L("关于 SwiftRight")
+        window.isReleasedWhenClosed = false
+        window.delegate = self
+
+        let hosting = NSHostingView(rootView: SRLocalizedRoot { SRAboutView() })
+        window.contentView = hosting
+        // 按内容的实际高度收一下窗口，免得底部留一条空白。
+        window.setContentSize(hosting.fittingSize)
+        window.center()
+
+        aboutWindow = window
+        present(window)
+    }
+
     // MARK: - 语言切换
 
     /// 窗口标题是 AppKit 属性，不在 SwiftUI 的重建范围里，得手动刷。
@@ -100,6 +130,7 @@ final class SRWindowManager: NSObject, NSWindowDelegate {
         managerWindow?.title = "SwiftRight"
         outputWindow?.title = L("运行输出")
         settingsWindow?.title = L("设置")
+        aboutWindow?.title = L("关于 SwiftRight")
     }
 
     // MARK: - 构造
