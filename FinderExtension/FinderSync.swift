@@ -154,15 +154,86 @@ final class FinderSync: FIFinderSync {
         return item
     }
 
+    /// 图标画布的逻辑尺寸。所有菜单项统一用这个尺寸，
+    /// 菜单里的文字才会对齐在同一列上。
+    private static let iconBox = NSSize(width: 20, height: 16)
+    /// 符号本身的目标高度，比画布矮一点留出呼吸空间。
+    private static let iconGlyphHeight: CGFloat = 15
+    private static let iconPointSize: CGFloat = 14
+
+    /// 渲染好的图标缓存。`menu(for:)` 每次右键都会跑一遍，
+    /// 十几个菜单项每次都重新画位图是白费。
+    private var iconCache: [String: NSImage] = [:]
+
+    /// 把 SF Symbol 渲染成菜单图标。
+    ///
+    /// 直接把 symbol image 交给 NSMenuItem 会又糊又不齐，原因有两个：
+    ///
+    /// 其一，符号的原始尺寸各不相同（doc.plaintext 是 15×17，
+    /// chevron.left.forwardslash.chevron.right 是 23×16，internaldrive 是 20×14），
+    /// 塞进访达的图标槽全是 ×0.94、×1.14 这种非整数倍缩放，边缘必然发虚；
+    /// 而且这个菜单要跨 XPC 代理给访达，NSSymbolImageRep 是私有类型，
+    /// 归档过去还剩多少矢量信息并不可控。
+    ///
+    /// 其二，尺寸不齐会让菜单项看起来大小不一。
+    ///
+    /// 所以这里自己按 2x 画成位图交出去 —— 位图跨进程无损 —— 并且
+    /// **按高度归一而不是塞进方框**：SF Symbols 的设计就是同一 pointSize 下
+    /// 视觉高度一致、宽度随字形变化，按框等比缩会把 `</>` 这类宽符号压得明显偏小。
     private func symbolImage(_ name: String) -> NSImage? {
-        guard let image = NSImage(systemSymbolName: name, accessibilityDescription: nil) else {
+        if let cached = iconCache[name] { return cached }
+
+        guard let symbol = NSImage(systemSymbolName: name, accessibilityDescription: nil) else {
             return nil
         }
-        let configured = image.withSymbolConfiguration(
-            NSImage.SymbolConfiguration(pointSize: 14, weight: .regular)
-        ) ?? image
-        configured.isTemplate = true
-        return configured
+        let configuration = NSImage.SymbolConfiguration(pointSize: Self.iconPointSize,
+                                                        weight: .regular)
+        let configured = symbol.withSymbolConfiguration(configuration) ?? symbol
+
+        let natural = configured.size
+        guard natural.width > 0, natural.height > 0 else { return nil }
+
+        let box = Self.iconBox
+        // 先按高度归一；个别特别宽的符号（如 23×16 的 `</>`）会超出画布宽度，
+        // 那就退回按宽度收一下，绝不拉伸。
+        let ratio = min(Self.iconGlyphHeight / natural.height, box.width / natural.width)
+        let drawn = NSSize(width: natural.width * ratio, height: natural.height * ratio)
+        let origin = NSPoint(x: ((box.width - drawn.width) / 2).rounded(),
+                             y: ((box.height - drawn.height) / 2).rounded())
+
+        // 像素尺寸取逻辑尺寸的 2 倍，rep.size 仍报逻辑尺寸，
+        // 于是它就是一张 2x 图，Retina 上一个逻辑点对两个物理像素，不再二次缩放。
+        let scale = 2
+        guard let rep = NSBitmapImageRep(
+            bitmapDataPlanes: nil,
+            pixelsWide: Int(box.width) * scale,
+            pixelsHigh: Int(box.height) * scale,
+            bitsPerSample: 8,
+            samplesPerPixel: 4,
+            hasAlpha: true,
+            isPlanar: false,
+            colorSpaceName: .deviceRGB,
+            bytesPerRow: 0,
+            bitsPerPixel: 0
+        ) else { return nil }
+        rep.size = box
+
+        NSGraphicsContext.saveGraphicsState()
+        NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: rep)
+        NSGraphicsContext.current?.imageInterpolation = .high
+        configured.draw(in: NSRect(origin: origin, size: drawn),
+                        from: .zero,
+                        operation: .sourceOver,
+                        fraction: 1)
+        NSGraphicsContext.restoreGraphicsState()
+
+        let image = NSImage(size: box)
+        image.addRepresentation(rep)
+        // 模板图：访达会按选中状态自己上色（未选中黑、选中白）。
+        image.isTemplate = true
+
+        iconCache[name] = image
+        return image
     }
 
     // MARK: - 点击
