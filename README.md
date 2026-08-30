@@ -14,25 +14,60 @@ Built with Swift / SwiftUI / Xcode. No third-party dependencies.
 
 ---
 
-## Quick start
+## Install
+
+### From a release build
+
+Download `SwiftRight-<version>.dmg` (or `.zip`) from [Releases](https://github.com/WHYBBE/SwiftRight/releases), drag **SwiftRight.app** into **Applications**, then:
+
+```bash
+xattr -dr com.apple.quarantine /Applications/SwiftRight.app
+```
+
+**That command is not optional.** The builds are ad-hoc signed and not notarized — see [Gatekeeper](#gatekeeper) below for why, and for what happens if you skip it.
+
+### From source
 
 ```bash
 swift Scripts/make-icon.swift   # optional: generate the app icon
 ./Scripts/build.sh              # generate project → build → install to /Applications → register
 ```
 
-Then:
+Locally built copies are signed with your own certificate and never quarantined, so no `xattr` step is needed.
 
-1. Open `/Applications/SwiftRight.app`
+Build without installing: `./Scripts/build.sh build`
+Package a distributable: `./Scripts/package.sh` → `dist/` (zip + dmg, ad-hoc signed)
+Develop in Xcode: `open SwiftRight.xcodeproj` (the project file is committed; `xcodegen` is only needed to regenerate it)
+
+### Then, either way
+
+1. Open `/Applications/SwiftRight.app` once
 2. **System Settings › General › Login Items & Extensions › Finder extensions** — enable **SwiftRight**
 3. Right-click anything in Finder
 
-The app lives in the menu bar (no Dock icon). Click its icon → **Manage Commands…**
+By default the app lives in the menu bar (no Dock icon). Click its icon → **Manage Commands…**
 
-Build without installing: `./Scripts/build.sh build`
-Develop in Xcode: `open SwiftRight.xcodeproj` (the project file is committed; `xcodegen` is only needed to regenerate it)
+**Does the app need to stay running?** No. The Finder extension is a separate process that reads the config directly; clicking a menu item launches the app on demand — measured at ~0.29 s cold versus ~0.18 s warm. If you'd rather it not stay resident, **Settings › General › Background** offers *Quit when idle*. The only hard requirement is opening the app once after installing, so it can write its initial config.
 
-**Does the app need to stay running?** No. The Finder extension is a separate process that reads the config directly; clicking a menu item launches the app on demand (measured at 0.25–0.40 s cold, 0.23–0.26 s warm). The only requirement is opening the app once after installing, so it can write its initial config.
+---
+
+## Gatekeeper
+
+Release builds are **ad-hoc signed and not notarized**, so macOS quarantines them on download and refuses to open them:
+
+> "SwiftRight" is damaged and can't be opened.
+
+That message is misleading — nothing is damaged. It is what Gatekeeper says about any app that carries a quarantine flag and no Developer ID signature. Removing the flag is enough:
+
+```bash
+xattr -dr com.apple.quarantine /Applications/SwiftRight.app
+```
+
+Skipping it also breaks the Finder extension silently: a quarantined bundle never gets registered, so no context menu appears and there is nothing to enable in System Settings.
+
+Files transferred by AirDrop, USB or a local share are not quarantined, so those copies open straight away.
+
+**Why not just notarize it?** Notarization requires a paid Apple Developer Program membership ($99/year) for a Developer ID certificate. Until then, ad-hoc signing is the honest alternative — and it has one advantage over signing with a development certificate: ad-hoc signatures carry no certificate, so they never expire. A development certificate lasts a year, and Xcode only requests a secure timestamp for Developer ID signatures, so a development-signed binary stops validating once the certificate lapses.
 
 ---
 
@@ -151,13 +186,27 @@ The generated command is an ordinary script using a heredoc, so it stays readabl
 
 Open from the menu bar icon, or ⌘,
 
-- **General** — language (System / 简体中文 / English, applied instantly), theme (System / Light / Dark), behavior
+- **General** — language (System / 简体中文 / English, applied instantly), theme (System / Light / Dark), how the app stays in the background, whether a failed background command opens the output window
 - **Menu** — context menu appearance
-- **Terminal** — scan, add manually, pick the default, adjust launch arguments per terminal, test one
+- **Terminal** — scan, add manually, pick the default, adjust launch arguments per terminal, test one, keep the terminal open after a command finishes
 - **Editors** — scan, add manually, toggle folder support, add to menu
 - **New File** — manage templates
 - **Configuration** — export / import (append or replace), file location, restore examples
 - **Extension** — status and troubleshooting
+
+### Background
+
+The Finder extension is sandboxed and cannot spawn external processes, so a non-sandboxed process has to execute commands. "Not resident" therefore means "cold launch every time" — there is no third option. **Settings › General › Background** picks where on that trade-off you sit:
+
+| Mode | Menu bar icon | Response | Leaves a process |
+|---|---|---|---|
+| **Stay in menu bar** (default) | yes | fastest | yes |
+| **Stay running, hide icon** | no | fastest | yes |
+| **Quit when idle** | no | ~0.08 s slower | no |
+
+*Quit when idle* waits until nothing is running and no window is open before exiting, so a long background command is never cut short.
+
+With the icon hidden, open the interface by double-clicking SwiftRight in Applications.
 
 ---
 
@@ -165,9 +214,10 @@ Open from the menu bar icon, or ⌘,
 
 **Nothing appears in the context menu**
 
-1. Is the app in `/Applications` and has it been opened at least once? Only then does the system register the extension
-2. Is SwiftRight enabled in System Settings? (the app's sidebar has a live status light)
-3. `killall Finder`
+1. If you downloaded a release build, did you remove the quarantine flag? A quarantined bundle is never registered — see [Gatekeeper](#gatekeeper)
+2. Is the app in `/Applications` and has it been opened at least once? Only then does the system register the extension
+3. Is SwiftRight enabled in System Settings? (the app's sidebar has a live status light)
+4. `killall Finder`
 
 The **?** button at the bottom of the sidebar jumps to the same tools.
 
@@ -198,18 +248,23 @@ Shared/                      compiled into both the app and the extension
   SRPlaceholder.swift          placeholder expansion + shell quoting
   SRTicket.swift               one-shot extension → app ticket
 App/                         host app (not sandboxed)
-  SwiftRightMain.swift         entry point, menu bar, URL callback
+  SwiftRightMain.swift         entry point, menu bar, URL callback, background residency
   SRCommandRunner.swift        Process execution, environment, timeout, terminal modes
   SRRunSession.swift           observable state of one run + incremental UTF-8 decoding
   SRAppModel.swift             UI data source and command generators
-  SRPreferences.swift          language / theme / localization
+  SRPreferences.swift          language / theme / residency / localization
+  SRWindowManager.swift        windows and the .accessory ⇄ .regular activation policy
   SRTerminal*.swift            terminal catalog and launch recipes
   SREditor*.swift              editor catalog
   SRFileTemplate.swift         new-file templates
-  Views/                       SwiftUI
+  SRTemplateStore.swift        template persistence
+  Views/                       SwiftUI, including the settings and about windows
 FinderExtension/             Finder extension (sandboxed)
   FinderSync.swift             monitored scope, menu building, click forwarding
-Scripts/                     build and icon generation
+Scripts/
+  build.sh                     build → install to /Applications → register the extension
+  package.sh                   build → ad-hoc re-sign → dist/ zip + dmg
+  make-icon.swift              generate the app icon
 ```
 
 ---

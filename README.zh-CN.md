@@ -14,25 +14,60 @@ macOS 访达（Finder）右键菜单扩展。在图形界面里定义任意 shel
 
 ---
 
-## 快速开始
+## 安装
+
+### 用发布版
+
+从 [Releases](https://github.com/WHYBBE/SwiftRight/releases) 下载 `SwiftRight-<版本>.dmg`（或 `.zip`），把 **SwiftRight.app** 拖进**应用程序**，然后：
+
+```bash
+xattr -dr com.apple.quarantine /Applications/SwiftRight.app
+```
+
+**这条命令不是可选的。** 发布版是 ad-hoc 签名、未经公证的——原因和不执行的后果见下面的 [Gatekeeper](#gatekeeper)。
+
+### 从源码构建
 
 ```bash
 swift Scripts/make-icon.swift   # 可选：生成 App 图标
 ./Scripts/build.sh              # 生成工程 → 编译 → 安装到 /Applications → 注册扩展
 ```
 
-然后：
+本地构建的产物用你自己的证书签名、也不会被打隔离标记，不需要 `xattr` 这一步。
 
-1. 打开 `/Applications/SwiftRight.app`
+只编译不安装：`./Scripts/build.sh build`
+打分发产物：`./Scripts/package.sh` → `dist/`（zip + dmg，ad-hoc 签名）
+在 Xcode 里开发：`open SwiftRight.xcodeproj`（工程文件已入库，只有需要重新生成时才用得上 `xcodegen`）
+
+### 两种方式都要做的
+
+1. 打开一次 `/Applications/SwiftRight.app`
 2. **系统设置 › 通用 › 登录项与扩展 › 访达扩展**，勾选 **SwiftRight**
 3. 在访达里右键任意文件
 
-App 常驻菜单栏（不占 Dock）。点菜单栏图标 → **管理命令…** 打开编辑器。
+默认情况下 App 常驻菜单栏（不占 Dock）。点菜单栏图标 → **管理命令…** 打开编辑器。
 
-只想编译不安装：`./Scripts/build.sh build`
-在 Xcode 里开发：`open SwiftRight.xcodeproj`（工程文件已入库，只有需要重新生成时才用得上 `xcodegen`）
+**需要让 App 一直挂后台吗？** 不需要。访达扩展是独立进程，直接读配置；点菜单项时 LaunchServices 会按需拉起主 App——实测冷启动约 0.29 秒、热启动约 0.18 秒。不想让它常驻的话，**设置 › 通用 › 后台常驻**里有「用完自动退出」。唯一的硬性要求是安装后打开一次 App，让它写出初始配置。
 
-**需要让 App 一直挂后台吗？** 不需要。访达扩展是独立进程，直接读配置；点菜单项时 LaunchServices 会按需拉起主 App（实测冷启动 0.25–0.40 秒，热启动 0.23–0.26 秒）。唯一的要求是安装后打开一次 App，让它写出初始配置。
+---
+
+## Gatekeeper
+
+发布版是 **ad-hoc 签名、未经公证**的，所以 macOS 会给下载到的包打上隔离标记并拒绝打开：
+
+> 「SwiftRight」已损坏，无法打开。
+
+这个提示有误导性——**没有任何东西损坏**。凡是带隔离标记又没有 Developer ID 签名的 App，Gatekeeper 都是这句话。去掉标记即可：
+
+```bash
+xattr -dr com.apple.quarantine /Applications/SwiftRight.app
+```
+
+不做这一步还会让访达扩展**静默失效**：带隔离标记的 bundle 根本不会被系统登记，于是右键菜单什么都不出现，系统设置里也找不到可勾选的项。
+
+通过 AirDrop、U 盘、局域网共享传过来的文件不会被打隔离标记，那些副本直接就能开。
+
+**为什么不干脆公证？** 公证需要付费的 Apple Developer Program 会员（每年 $99）才能拿到 Developer ID 证书。在那之前 ad-hoc 是诚实的替代方案，而且它比用开发证书签名还多一个好处：**ad-hoc 没有证书，也就不会过期**。开发证书有效期一年，而 Xcode 只在 Developer ID 签名时才向苹果时间戳服务器申请安全时间戳，所以开发证书签出来的二进制一旦证书到期，签名就不再通过校验。
 
 ---
 
@@ -151,13 +186,27 @@ kitty、WezTerm、Ghostty、rio 在命令退出时会连窗口一起关掉，短
 
 从菜单栏图标打开，或按 ⌘,
 
-- **通用** — 语言（跟随系统 / 简体中文 / English，即时生效）、主题（跟随系统 / 浅色 / 深色）、行为
+- **通用** — 语言（跟随系统 / 简体中文 / English，即时生效）、主题（跟随系统 / 浅色 / 深色）、后台常驻方式、后台命令失败时是否自动弹出输出窗口
 - **菜单** — 右键菜单外观
-- **终端** — 扫描、手动添加、选默认、逐项调启动参数、单项测试
+- **终端** — 扫描、手动添加、选默认、逐项调启动参数、单项测试、命令结束后是否保持终端打开
 - **编辑器** — 扫描、手动添加、切换是否可开工程、加到菜单
 - **新建文件** — 管理模板
 - **配置** — 导出 / 导入（追加或替换）、文件位置、恢复示例
 - **扩展** — 状态与排查
+
+### 后台常驻
+
+访达扩展被强制沙盒、起不了外部进程，所以必须有个非沙盒进程来执行命令。「不常驻」也就等于「每次冷启动」，没有第三条路。**设置 › 通用 › 后台常驻**决定你落在这个取舍的哪一头：
+
+| 模式 | 菜单栏图标 | 响应 | 是否留进程 |
+|---|---|---|---|
+| **常驻菜单栏**（默认） | 有 | 最快 | 是 |
+| **常驻但隐藏图标** | 无 | 最快 | 是 |
+| **用完自动退出** | 无 | 慢约 0.08 秒 | 否 |
+
+「用完自动退出」会等到没有命令在跑、也没有窗口开着才退出，所以长时间的后台命令不会被中途掐断。
+
+隐藏图标之后，要打开界面就双击「应用程序」里的 SwiftRight。
 
 ---
 
@@ -165,9 +214,10 @@ kitty、WezTerm、Ghostty、rio 在命令退出时会连窗口一起关掉，短
 
 **右键菜单里什么都没有**
 
-1. App 是否在 `/Applications` 且至少打开过一次 —— 系统只登记这样的扩展
-2. 系统设置里是否勾选了 SwiftRight（App 侧边栏底部有实时状态灯）
-3. `killall Finder`
+1. 如果装的是发布版，隔离标记去掉了吗？带标记的 bundle 根本不会被登记——见 [Gatekeeper](#gatekeeper)
+2. App 是否在 `/Applications` 且至少打开过一次 —— 系统只登记这样的扩展
+3. 系统设置里是否勾选了 SwiftRight（App 侧边栏底部有实时状态灯）
+4. `killall Finder`
 
 侧边栏底部的 **?** 按钮会跳到同样的排查工具。
 
@@ -198,18 +248,23 @@ Shared/                      App 与扩展共享的代码
   SRPlaceholder.swift          占位符展开 + shell 转义
   SRTicket.swift               扩展 → App 的一次性调用凭据
 App/                         主 App（非沙盒）
-  SwiftRightMain.swift         入口、菜单栏、URL 回调
+  SwiftRightMain.swift         入口、菜单栏、URL 回调、后台常驻方式
   SRCommandRunner.swift        Process 执行、环境、超时、终端模式
   SRRunSession.swift           单次执行的可观察状态 + UTF-8 增量解码
   SRAppModel.swift             界面数据源与命令生成器
-  SRPreferences.swift          语言 / 主题 / 本地化
+  SRPreferences.swift          语言 / 主题 / 常驻方式 / 本地化
+  SRWindowManager.swift        窗口与 .accessory ⇄ .regular 激活策略
   SRTerminal*.swift            终端清单与启动配方
   SREditor*.swift              编辑器清单
   SRFileTemplate.swift         新建文件模板
-  Views/                       SwiftUI 界面
+  SRTemplateStore.swift        模板持久化
+  Views/                       SwiftUI 界面，含设置窗口与关于窗口
 FinderExtension/             访达扩展（沙盒）
   FinderSync.swift             监视范围、菜单构建、点击转发
-Scripts/                     构建与图标生成
+Scripts/
+  build.sh                     编译 → 安装到 /Applications → 注册扩展
+  package.sh                   编译 → ad-hoc 重签 → dist/ 下的 zip 与 dmg
+  make-icon.swift              生成 App 图标
 ```
 
 ---
