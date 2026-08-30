@@ -48,6 +48,43 @@ enum SRThemePreference: String, CaseIterable, Identifiable, Codable {
     }
 }
 
+// MARK: - 常驻方式
+
+/// App 在后台以什么形态存在。
+///
+/// 这三种是同一个权衡的三个点：扩展被强制沙盒、起不了外部进程，
+/// 所以必须有个非沙盒进程来执行命令。"不常驻"就等于"每次冷启动"，
+/// 没有第三条路。实测冷热差距约 0.11 秒。
+enum SRResidencyMode: String, CaseIterable, Identifiable, Codable {
+    /// 常驻，菜单栏有图标。
+    case menuBar
+    /// 常驻，但不显示图标 —— 靠双击 App 打开界面。
+    case hidden
+    /// 命令跑完就退出，不常驻。
+    case autoQuit
+
+    var id: String { rawValue }
+
+    var localizedName: String {
+        switch self {
+        case .menuBar: return SRPreferences.shared.localized("常驻菜单栏")
+        case .hidden: return SRPreferences.shared.localized("常驻但隐藏图标")
+        case .autoQuit: return SRPreferences.shared.localized("用完自动退出")
+        }
+    }
+
+    var localizedDetail: String {
+        switch self {
+        case .menuBar:
+            return SRPreferences.shared.localized("菜单栏有图标，点它就能打开管理和设置。命令响应最快。")
+        case .hidden:
+            return SRPreferences.shared.localized("进程仍常驻，响应一样快，但菜单栏看不到图标 —— 要打开界面得双击「应用程序」里的 SwiftRight。")
+        case .autoQuit:
+            return SRPreferences.shared.localized("命令跑完、窗口关掉之后就退出，平时不占任何位置。代价是每次都要冷启动，约慢 0.1 秒。")
+        }
+    }
+}
+
 // MARK: - 偏好
 
 /// App 自身的偏好。与 commands.json 分开存：
@@ -83,8 +120,19 @@ final class SRPreferences: ObservableObject {
         didSet { defaults.set(keepTerminalOpen, forKey: Keys.keepTerminalOpen) }
     }
 
+    /// 后台常驻形态。
+    @Published var residency: SRResidencyMode {
+        didSet {
+            guard oldValue != residency else { return }
+            defaults.set(residency.rawValue, forKey: Keys.residency)
+            residencyDidChange.send()
+        }
+    }
+
     /// AppKit 那几处菜单是命令式搭出来的，语言变了得重建，靠这个通知。
     let languageDidChange = PassthroughSubject<Void, Never>()
+    /// 常驻方式改了要装/卸菜单栏图标，也靠通知，避免 SRPreferences 反向依赖 AppDelegate。
+    let residencyDidChange = PassthroughSubject<Void, Never>()
 
     private let defaults = UserDefaults.standard
     private var localizedBundle: Bundle?
@@ -94,6 +142,7 @@ final class SRPreferences: ObservableObject {
         static let theme = "preferredTheme"
         static let openOutputOnFailure = "openOutputOnFailure"
         static let keepTerminalOpen = "keepTerminalOpen"
+        static let residency = "residencyMode"
     }
 
     private init() {
@@ -101,6 +150,8 @@ final class SRPreferences: ObservableObject {
         theme = SRThemePreference(rawValue: defaults.string(forKey: Keys.theme) ?? "") ?? .system
         openOutputOnFailure = defaults.object(forKey: Keys.openOutputOnFailure) as? Bool ?? true
         keepTerminalOpen = defaults.object(forKey: Keys.keepTerminalOpen) as? Bool ?? true
+        residency = SRResidencyMode(rawValue: defaults.string(forKey: Keys.residency) ?? "")
+            ?? .menuBar
         resolveBundle()
     }
 

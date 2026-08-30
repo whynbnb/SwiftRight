@@ -122,6 +122,20 @@ private struct SRGeneralTab: View {
                 }
 
                 SRSection(L("行为")) {
+                    Picker(L("后台常驻"), selection: $preferences.residency) {
+                        ForEach(SRResidencyMode.allCases) { mode in
+                            Text(mode.localizedName).tag(mode)
+                        }
+                    }
+                    .fixedSize()
+
+                    Text(preferences.residency.localizedDetail)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+
+                    Divider().padding(.vertical, 2)
+
                     Toggle(L("后台命令失败时自动打开输出窗口"),
                            isOn: $preferences.openOutputOnFailure)
                     Text(L("关掉之后，后台命令失败只会静静地记在「运行输出」里。"))

@@ -306,3 +306,12 @@
 "包名" = "Bundle ID";
 "仓库" = "Repository";
 "开源协议" = "License";
+
+/* MARK: - 常驻方式 */
+"后台常驻" = "Background";
+"常驻菜单栏" = "Stay in menu bar";
+"常驻但隐藏图标" = "Stay running, hide icon";
+"用完自动退出" = "Quit when idle";
+"菜单栏有图标，点它就能打开管理和设置。命令响应最快。" = "An icon in the menu bar opens the manager and settings. Fastest command response.";
+"进程仍常驻，响应一样快，但菜单栏看不到图标 —— 要打开界面得双击「应用程序」里的 SwiftRight。" = "The process stays resident so response is just as fast, but there is no menu bar icon — open the interface by double-clicking SwiftRight in Applications.";
+"命令跑完、窗口关掉之后就退出，平时不占任何位置。代价是每次都要冷启动，约慢 0.1 秒。" = "Quits once the command has finished and the windows are closed, taking up nothing in between. The cost is a cold launch every time, about 0.1 s slower.";

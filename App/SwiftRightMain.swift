@@ -21,6 +21,8 @@ final class SRAppDelegate: NSObject, NSApplicationDelegate {
     private var statusItem: NSStatusItem?
     /// 冷启动时是不是因为点了右键菜单才被拉起来的。
     private var launchedForTicket = false
+    /// 「用完自动退出」模式下排上的那次空闲检查。
+    private var idleQuitCheck: DispatchWorkItem?
     private var cancellables = Set<AnyCancellable>()
 
     // MARK: - 启动
@@ -41,8 +43,9 @@ final class SRAppDelegate: NSObject, NSApplicationDelegate {
         _ = SRTerminalCatalog.shared
         _ = SREditorCatalog.shared
         _ = SRTemplateStore.shared
-        installStatusItem()
+        applyResidency()
         observeLanguageChanges()
+        observePreferenceChanges()
 
         // URL 事件到底在 didFinishLaunching 之前还是之后送达，各系统版本并不一致。
         // 稍等一拍再判断：如果这次启动是为了执行命令，就别把主窗口弹出来。
@@ -74,6 +77,55 @@ final class SRAppDelegate: NSObject, NSApplicationDelegate {
                 SRWindowManager.shared.refreshWindowTitles()
             }
             .store(in: &cancellables)
+    }
+
+    private func observePreferenceChanges() {
+        SRPreferences.shared.residencyDidChange
+            .receive(on: RunLoop.main)
+            .sink { [weak self] in self?.applyResidency() }
+            .store(in: &cancellables)
+    }
+
+    // MARK: - 常驻方式
+
+    /// 按当前设置装上或撤掉菜单栏图标。改设置后立即生效，不用重启。
+    private func applyResidency() {
+        switch SRPreferences.shared.residency {
+        case .menuBar:
+            if statusItem == nil { installStatusItem() }
+            // 从"自动退出"切回来时，把已经排上的退出取消掉。
+            idleQuitCheck?.cancel()
+            idleQuitCheck = nil
+        case .hidden, .autoQuit:
+            if let statusItem {
+                NSStatusBar.system.removeStatusItem(statusItem)
+                self.statusItem = nil
+            }
+            scheduleIdleQuitCheck()
+        }
+    }
+
+    /// 命令跑完、窗口关掉之后调一下，够安静就退出。
+    ///
+    /// 延迟几秒再判断有两个原因：连着点几条命令时不至于退了又起；
+    /// 以及 notifyOnFinish 的系统通知需要一点时间投递出去。
+    func scheduleIdleQuitCheck() {
+        guard SRPreferences.shared.residency == .autoQuit else { return }
+        idleQuitCheck?.cancel()
+        let work = DispatchWorkItem { [weak self] in self?.quitIfIdle() }
+        idleQuitCheck = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3, execute: work)
+    }
+
+    private func quitIfIdle() {
+        guard SRPreferences.shared.residency == .autoQuit,
+              // 窗口还开着说明用户正在看，别退。
+              !SRWindowManager.shared.hasVisibleWindow,
+              // 命令还在跑就更不能退 —— 退了子进程会被 launchd 收养，
+              // 但输出窗口和完成通知都没了。
+              !SRCommandRunner.shared.hasRunningSession
+        else { return }
+        NSApp.terminate(nil)
     }
 
     // MARK: - 扩展回调
@@ -108,6 +160,10 @@ final class SRAppDelegate: NSObject, NSApplicationDelegate {
                                    targetPath: ticket.targetPath) {
             SRWindowManager.shared.showOutput()
         }
+
+        // terminal 模式不产生会话，跑完不会走 handleCompletion，
+        // 所以这里补一次判断，否则那种命令之后 App 会一直挂着不退。
+        scheduleIdleQuitCheck()
     }
 
     // MARK: - 菜单栏

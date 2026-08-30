@@ -17,6 +17,11 @@ final class SRCommandRunner: ObservableObject {
 
     private init() {}
 
+    /// 还有命令在跑吗。「用完自动退出」要靠它判断能不能退。
+    var hasRunningSession: Bool {
+        sessions.contains { $0.isRunning }
+    }
+
     // MARK: - 入口
 
     /// 执行一条命令。`onNeedsOutputWindow` 由调用方决定怎么把窗口开出来。
@@ -410,6 +415,9 @@ final class SRCommandRunner: ObservableObject {
             focusedSession = session
             onNeedsOutputWindow()
         }
+
+        // 这条跑完了，可能已经没事可做，交给「用完自动退出」那套判断。
+        SRAppDelegate.retained?.scheduleIdleQuitCheck()
     }
 
     /// `run()` 只会在主线程被调用（AppDelegate 的 URL 回调、SwiftUI 的按钮）。

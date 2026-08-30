@@ -23,6 +23,11 @@ final class SRWindowManager: NSObject, NSWindowDelegate {
         [managerWindow, outputWindow, settingsWindow, aboutWindow].compactMap { $0 }
     }
 
+    /// 还有窗口开着吗。「用完自动退出」要靠它判断能不能退。
+    var hasVisibleWindow: Bool {
+        allWindows.contains { $0.isVisible }
+    }
+
     // MARK: - 主窗口
 
     func showManager() {
@@ -176,11 +181,13 @@ final class SRWindowManager: NSObject, NSWindowDelegate {
         // 关窗动作走完之后 isVisible 才更新，所以推到下一个 runloop 再判断。
         DispatchQueue.main.async { [weak self] in
             self?.syncActivationPolicy()
+            // 窗口全关了可能就该退出了，交给「用完自动退出」那套判断。
+            SRAppDelegate.retained?.scheduleIdleQuitCheck()
         }
     }
 
     private func syncActivationPolicy() {
-        if !allWindows.contains(where: { $0.isVisible }) {
+        if !hasVisibleWindow {
             NSApp.setActivationPolicy(.accessory)
         }
     }
