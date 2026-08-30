@@ -11,25 +11,78 @@ struct SRSettingsView: View {
     @EnvironmentObject private var model: SRAppModel
     @EnvironmentObject private var preferences: SRPreferences
 
-    var body: some View {
-        TabView {
-            SRGeneralTab()
-                .tabItem { Label(L("通用"), systemImage: "gearshape") }
-            SRMenuAppearanceTab()
-                .tabItem { Label(L("菜单"), systemImage: "list.bullet.indent") }
-            SRTerminalTab()
-                .tabItem { Label(L("终端"), systemImage: "terminal") }
-            SREditorTab()
-                .tabItem { Label(L("编辑器"), systemImage: "chevron.left.forwardslash.chevron.right") }
-            SRTemplateTab()
-                .tabItem { Label(L("新建文件"), systemImage: "doc.badge.plus") }
-            SRConfigTab()
-                .tabItem { Label(L("配置"), systemImage: "doc.text") }
-            SRExtensionTab()
-                .tabItem { Label(L("扩展"), systemImage: "puzzlepiece.extension") }
+    /// 分页标识。用 enum 而不是 TabView 的隐式顺序，加减页不容易错位。
+    private enum Tab: String, CaseIterable, Identifiable {
+        case general, menu, terminal, editor, template, config, extensionStatus
+
+        var id: String { rawValue }
+
+        var title: String {
+            switch self {
+            case .general: return L("通用")
+            case .menu: return L("菜单")
+            case .terminal: return L("终端")
+            case .editor: return L("编辑器")
+            case .template: return L("新建文件")
+            case .config: return L("配置")
+            case .extensionStatus: return L("扩展")
+            }
         }
-        .padding(20)
-        .frame(width: 600, height: 520)
+
+        var symbol: String {
+            switch self {
+            case .general: return "gearshape"
+            case .menu: return "list.bullet.indent"
+            case .terminal: return "terminal"
+            case .editor: return "chevron.left.forwardslash.chevron.right"
+            case .template: return "doc.badge.plus"
+            case .config: return "doc.text"
+            case .extensionStatus: return "puzzlepiece.extension"
+            }
+        }
+    }
+
+    @State private var tab: Tab = .general
+
+    var body: some View {
+        // 不用 TabView：macOS 26 起，TabView 作为窗口根内容时会把标签栏
+        // 提升进标题栏，和红绿灯按钮挤在一起，窗口标题也被顶掉。
+        //
+        // 也不用横向分段控件：七个分页在英文下（General / Menu / Terminal /
+        // Editors / New File / Configuration / Extension）宽度就超了，
+        // 两头会被切掉，而且以后加页只会更挤。
+        //
+        // 侧栏与语言和分页数量都无关，长了就滚动。
+        HStack(spacing: 0) {
+            List(selection: $tab) {
+                ForEach(Tab.allCases) { item in
+                    Label(item.title, systemImage: item.symbol)
+                        .tag(item)
+                }
+            }
+            .listStyle(.sidebar)
+            .frame(width: 172)
+
+            Divider()
+
+            content
+                .padding(20)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        }
+        .frame(width: 820, height: 560)
+    }
+
+    @ViewBuilder
+    private var content: some View {
+        switch tab {
+        case .general: SRGeneralTab()
+        case .menu: SRMenuAppearanceTab()
+        case .terminal: SRTerminalTab()
+        case .editor: SREditorTab()
+        case .template: SRTemplateTab()
+        case .config: SRConfigTab()
+        case .extensionStatus: SRExtensionTab()
+        }
     }
 }
 

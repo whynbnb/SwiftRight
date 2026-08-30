@@ -75,9 +75,9 @@ final class SRWindowManager: NSObject, NSWindowDelegate {
             return
         }
 
-        // 设置窗口内容是固定尺寸的 TabView，不给缩放。
+        // 设置窗口内容是固定尺寸的，不给缩放。
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 640, height: 580),
+            contentRect: NSRect(x: 0, y: 0, width: 820, height: 560),
             styleMask: [.titled, .closable],
             backing: .buffered,
             defer: false
