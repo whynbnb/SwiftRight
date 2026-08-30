@@ -75,13 +75,21 @@ final class SRWindowManager: NSObject, NSWindowDelegate {
             return
         }
 
-        // 设置窗口内容是固定尺寸的，不给缩放。
+        // fullSizeContentView + 透明标题栏：内容区一直铺到窗口顶端，
+        // 侧栏因此是通体到顶的，红绿灯直接浮在侧栏材质上 ——
+        // 这是访达、系统设置那种统一侧栏的做法。
+        // 保留标准标题栏的话，侧栏只能从标题栏下面开始，顶上会多出一条 header。
+        //
+        // 注意 fullSizeContentView 下 contentRect 就是整窗尺寸（不像标准
+        // 标题栏那样再加 32pt），所以这里给的 820×560 即窗口最终大小。
         let window = NSWindow(
             contentRect: NSRect(x: 0, y: 0, width: 820, height: 560),
-            styleMask: [.titled, .closable],
+            styleMask: [.titled, .closable, .fullSizeContentView],
             backing: .buffered,
             defer: false
         )
+        window.titlebarAppearsTransparent = true
+        window.titleVisibility = .hidden
         window.title = L("设置")
         window.isReleasedWhenClosed = false
         window.delegate = self

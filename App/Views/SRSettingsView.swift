@@ -53,6 +53,11 @@ struct SRSettingsView: View {
         // 两头会被切掉，而且以后加页只会更挤。
         //
         // 侧栏与语言和分页数量都无关，长了就滚动。
+        //
+        // 窗口开了 fullSizeContentView，这里不要再手动 ignoresSafeArea 或
+        // safeAreaInset 去躲标题栏 —— SwiftUI 本来就分得清：List 的材质
+        // 铺满整列（所以侧栏通体到顶），只把行内容按安全区往下压。
+        // 手动插一脚反而会让两套布局打架，底部露出窗口背景。
         HStack(spacing: 0) {
             List(selection: $tab) {
                 ForEach(Tab.allCases) { item in
@@ -69,7 +74,8 @@ struct SRSettingsView: View {
                 .padding(20)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         }
-        .frame(width: 820, height: 560)
+        // 尺寸交给窗口定，这里只管填满。
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     @ViewBuilder
