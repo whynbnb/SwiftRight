@@ -17,3 +17,6 @@ xcuserdata/
 
 # SwiftRight 运行时数据（不该出现在仓库里）
 Scripts/*.log
+
+# 打包产物
+dist/
