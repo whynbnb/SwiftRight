@@ -76,70 +76,15 @@ struct RootView: View {
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
         ToolbarItemGroup(placement: .navigation) {
-            // 主动作还是"新建空白命令"，点箭头才展开终端列表 ——
-            // 从已扫描的终端一键生成「在此处打开 kitty」这类命令。
+            // 主动作是新建空白命令，点箭头展开生成器。
+            // 三类生成器各收进一个子菜单：平铺的话终端 11 + 编辑器 15 +
+            // 模板 10，一个菜单三十多项，根本没法看。
             Menu {
                 Button(L("空白命令")) { model.addCommand() }
-
-                if !catalog.terminals.isEmpty {
-                    Divider()
-                    Section(L("在此处打开终端…")) {
-                        ForEach(catalog.terminals) { terminal in
-                            Button {
-                                model.addTerminalCommand(for: terminal)
-                            } label: {
-                                // 已经建过的打个勾，省得重复点。
-                                if model.terminalCommand(for: terminal.id) != nil {
-                                    Label(terminal.name, systemImage: "checkmark")
-                                } else {
-                                    Text(terminal.name)
-                                }
-                            }
-                        }
-                    }
-                }
-
-                if !editors.editors.isEmpty {
-                    Divider()
-                    Section(L("在此处打开编辑器…")) {
-                        ForEach(editors.editors) { editor in
-                            Button {
-                                model.addEditorCommand(for: editor)
-                            } label: {
-                                if model.editorCommand(for: editor.id) != nil {
-                                    Label(editor.name, systemImage: "checkmark")
-                                } else {
-                                    Text(editor.name)
-                                }
-                            }
-                        }
-                    }
-                }
-
-                if !templates.templates.isEmpty {
-                    Divider()
-                    Section(L("新建文件…")) {
-                        ForEach(templates.templates) { template in
-                            Button {
-                                model.addTemplateCommand(for: template)
-                            } label: {
-                                if model.templateCommand(for: template.id) != nil {
-                                    Label(template.name, systemImage: "checkmark")
-                                } else {
-                                    Text(template.name)
-                                }
-                            }
-                        }
-                    }
-                }
-
-                if !catalog.terminals.isEmpty || !editors.editors.isEmpty {
-                    Divider()
-                    Button(L("为全部终端和编辑器创建")) {
-                        model.addTerminalCommands(for: catalog.terminals)
-                        model.addEditorCommands(for: editors.editors)
-                    }
-                }
+                Divider()
+                terminalMenu
+                editorMenu
+                templateMenu
             } label: {
                 Label(L("新建"), systemImage: "plus")
             } primaryAction: {
@@ -172,6 +117,74 @@ struct RootView: View {
                 Label(L("设置"), systemImage: "gearshape")
             }
             .help(L("设置"))
+        }
+    }
+
+    // MARK: - 生成器子菜单
+
+    /// 每组末尾都带自己的「全部添加」。原来只有一个「为全部终端和编辑器创建」，
+    /// 加了模板之后它就漏了一类，而且用户多半只想一次加一类。
+    @ViewBuilder
+    private var terminalMenu: some View {
+        if !catalog.terminals.isEmpty {
+            Menu(L("在此处打开终端")) {
+                ForEach(catalog.terminals) { terminal in
+                    Button {
+                        model.addTerminalCommand(for: terminal)
+                    } label: {
+                        // 已经建过的打个勾，省得重复点。
+                        if model.terminalCommand(for: terminal.id) != nil {
+                            Label(terminal.name, systemImage: "checkmark")
+                        } else {
+                            Text(terminal.name)
+                        }
+                    }
+                }
+                Divider()
+                Button(L("全部添加")) { model.addTerminalCommands(for: catalog.terminals) }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var editorMenu: some View {
+        if !editors.editors.isEmpty {
+            Menu(L("在此处打开编辑器")) {
+                ForEach(editors.editors) { editor in
+                    Button {
+                        model.addEditorCommand(for: editor)
+                    } label: {
+                        if model.editorCommand(for: editor.id) != nil {
+                            Label(editor.name, systemImage: "checkmark")
+                        } else {
+                            Text(editor.name)
+                        }
+                    }
+                }
+                Divider()
+                Button(L("全部添加")) { model.addEditorCommands(for: editors.editors) }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var templateMenu: some View {
+        if !templates.templates.isEmpty {
+            Menu(L("新建文件")) {
+                ForEach(templates.templates) { template in
+                    Button {
+                        model.addTemplateCommand(for: template)
+                    } label: {
+                        if model.templateCommand(for: template.id) != nil {
+                            Label(template.name, systemImage: "checkmark")
+                        } else {
+                            Text(template.name)
+                        }
+                    }
+                }
+                Divider()
+                Button(L("全部添加")) { model.addTemplateCommands(for: templates.templates) }
+            }
         }
     }
 }

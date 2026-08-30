@@ -261,9 +261,6 @@
 "编辑器" = "Editors";
 "扫描本机编辑器" = "Scan for Editors";
 "为全部创建" = "Create for All";
-"在此处打开终端…" = "Open terminal here…";
-"在此处打开编辑器…" = "Open editor here…";
-"为全部终端和编辑器创建" = "Create for All Terminals and Editors";
 "没有发现新编辑器。" = "No new editors found.";
 "菜单里已经都有了。" = "They are all in the menu already.";
 "新增 %@ 条右键命令。" = "Added %@ context-menu commands.";
@@ -276,7 +273,6 @@
 
 /* MARK: - 设置：新建文件 */
 "新建文件" = "New File";
-"新建文件…" = "New file…";
 "新建 %@" = "New %@";
 "新建模板" = "New Template";
 "新模板" = "New Template";
@@ -300,3 +296,6 @@
 "文档" = "Document";
 "纯文本" = "Plain Text";
 "Shell 脚本" = "Shell Script";
+"在此处打开终端" = "Open terminal here";
+"在此处打开编辑器" = "Open editor here";
+"全部添加" = "Add All";
