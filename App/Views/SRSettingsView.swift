@@ -21,6 +21,8 @@ struct SRSettingsView: View {
                 .tabItem { Label(L("终端"), systemImage: "terminal") }
             SREditorTab()
                 .tabItem { Label(L("编辑器"), systemImage: "chevron.left.forwardslash.chevron.right") }
+            SRTemplateTab()
+                .tabItem { Label(L("新建文件"), systemImage: "doc.badge.plus") }
             SRConfigTab()
                 .tabItem { Label(L("配置"), systemImage: "doc.text") }
             SRExtensionTab()

@@ -40,6 +40,7 @@ final class SRAppDelegate: NSObject, NSApplicationDelegate {
         // 第一次会白等一下；启动时扫完，设置页打开也是即时的。
         _ = SRTerminalCatalog.shared
         _ = SREditorCatalog.shared
+        _ = SRTemplateStore.shared
         installStatusItem()
         observeLanguageChanges()
 

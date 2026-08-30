@@ -273,3 +273,30 @@
 "能把文件夹当工程打开" = "Can open a folder as a project";
 "「加到菜单」会生成一条 open -b <bundle id> 的命令，按 bundle id 打开，应用升级搬家都不会失效。" = "Add to Menu generates an open -b <bundle id> command. Opening by bundle id keeps working after the app is updated or moved.";
 "标着「工程」的编辑器能把文件夹当工程打开，生成的命令对文件和文件夹都生效；其余只对文件生效。判断不对的话可以在每一行里改。" = "Editors tagged “project” can open a folder as a project, so their command applies to both files and folders; the rest apply to files only. Toggle it per row if a guess is wrong.";
+
+/* MARK: - 设置：新建文件 */
+"新建文件" = "New File";
+"新建文件…" = "New file…";
+"新建 %@" = "New %@";
+"新建模板" = "New Template";
+"新模板" = "New Template";
+"全部加入" = "Add All";
+"恢复内置模板" = "Restore Built-ins";
+"内置模板都在。" = "All built-in templates are present.";
+"补回 %@ 个模板。" = "Restored %@ templates.";
+"已加入右键菜单。" = "Added to the context menu.";
+"命令会出现在右键菜单的「新建文件」分组里，只在文件夹上和窗口空白处显示。" = "The command appears under the New File group, only on folders and on empty space in a window.";
+"模板名称" = "Template name";
+"默认文件名" = "Default file name";
+"后缀" = "Ext";
+"删除这个模板" = "Delete this template";
+"建好后加可执行权限" = "Make the new file executable";
+"文件初始内容" = "Initial contents";
+"重名会自动加序号：%@ 被占用就建 %@。" = "Name collisions get a number: if %@ exists, it creates %@.";
+"左边选一个模板，或者新建一个。" = "Pick a template on the left, or create one.";
+"生成的命令是一条普通脚本命令，可以在主窗口里继续改。改模板会自动同步到已生成的那条命令。" = "The generated command is an ordinary script command you can keep editing in the main window. Editing a template syncs into the command it generated.";
+"未命名" = "Untitled";
+"标题" = "Title";
+"文档" = "Document";
+"纯文本" = "Plain Text";
+"Shell 脚本" = "Shell Script";

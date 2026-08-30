@@ -29,7 +29,10 @@
 		5BFFFFB1CD83CF015B84DAA2 /* SRTerminalCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 229C4BB81C3CADB888E234A8 /* SRTerminalCatalog.swift */; };
 		61BA0F65F4B45214891163F7 /* SRPaths.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22CD14746B42C16B4D63D233 /* SRPaths.swift */; };
 		63CAE7CC06BE5F26CA5850F8 /* SRCommandDisplay.swift in Sources */ = {isa = PBXBuildFile; fileRef = A220884B1733DD779F23DAB0 /* SRCommandDisplay.swift */; };
+		662441E71221151A0DDB23F6 /* SRTemplateStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7F1B52CC4DD2B154E9B90338 /* SRTemplateStore.swift */; };
+		8AB46D5164A4D3436AF84D82 /* SRTemplateTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DADA3E0294DF4AAF74453C3 /* SRTemplateTab.swift */; };
 		9270FE06A1CF0179BB9686A1 /* SRSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 974ABC296C24049A946537E9 /* SRSettingsView.swift */; };
+		92E0EF87D007660FEBF8968B /* SRFileTemplate.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCB29CDD4E75B396B430762B /* SRFileTemplate.swift */; };
 		9562F5B906D0F6908C17E076 /* SRTicket.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BC99858BDF590DE8045C54F /* SRTicket.swift */; };
 		A01657C2B09AC086ED89A9A7 /* FinderSync.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 325F7719C72FD29BD573D30B /* FinderSync.framework */; };
 		A684D615D95908E097620DEE /* SRCommandEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FEB80F52100A0557047743E /* SRCommandEditorView.swift */; };
@@ -73,6 +76,7 @@
 
 /* Begin PBXFileReference section */
 		0451571C94F43C4DB36C59CA /* SRTerminal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SRTerminal.swift; sourceTree = "<group>"; };
+		1DADA3E0294DF4AAF74453C3 /* SRTemplateTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SRTemplateTab.swift; sourceTree = "<group>"; };
 		229C4BB81C3CADB888E234A8 /* SRTerminalCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SRTerminalCatalog.swift; sourceTree = "<group>"; };
 		22CD14746B42C16B4D63D233 /* SRPaths.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SRPaths.swift; sourceTree = "<group>"; };
 		24DB47131C7907CD299CBC21 /* SRCommand.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SRCommand.swift; sourceTree = "<group>"; };
@@ -94,6 +98,7 @@
 		6ADCB146689C8EA418DD022F /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
 		7772906F4E9915B52682B9E5 /* FinderExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = FinderExtension.entitlements; sourceTree = "<group>"; };
 		78B5E8CBAEBA9076B0E31D3D /* SRPlaceholder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SRPlaceholder.swift; sourceTree = "<group>"; };
+		7F1B52CC4DD2B154E9B90338 /* SRTemplateStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SRTemplateStore.swift; sourceTree = "<group>"; };
 		8F937B6746E68B697996A7C9 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		974ABC296C24049A946537E9 /* SRSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SRSettingsView.swift; sourceTree = "<group>"; };
 		9A64F420C7952A0E54FE1572 /* SwiftRightMain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftRightMain.swift; sourceTree = "<group>"; };
@@ -110,6 +115,7 @@
 		D765A3EF5919728DB3D231C0 /* SREditorTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SREditorTab.swift; sourceTree = "<group>"; };
 		EA95611080D146A7C95C090B /* SRAppModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SRAppModel.swift; sourceTree = "<group>"; };
 		EC8DBDD1995D0562BE3F03F0 /* SRScriptEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SRScriptEditor.swift; sourceTree = "<group>"; };
+		FCB29CDD4E75B396B430762B /* SRFileTemplate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SRFileTemplate.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -154,6 +160,7 @@
 				EC8DBDD1995D0562BE3F03F0 /* SRScriptEditor.swift */,
 				974ABC296C24049A946537E9 /* SRSettingsView.swift */,
 				B86EA23B335B0A275A356E12 /* SRSymbolPicker.swift */,
+				1DADA3E0294DF4AAF74453C3 /* SRTemplateTab.swift */,
 				67A90FE023627FEA622B014B /* SRTerminalTab.swift */,
 			);
 			path = Views;
@@ -218,9 +225,11 @@
 				513B890A1FE3A1B8D9210D69 /* SRCommandRunner.swift */,
 				408CDDBFC6B4C45C40EEC19D /* SREditor.swift */,
 				61A495D5F013D7806573FBDD /* SREditorCatalog.swift */,
+				FCB29CDD4E75B396B430762B /* SRFileTemplate.swift */,
 				D2C1590133A9BFDAC9F3A226 /* SRMainMenu.swift */,
 				4D2A15BC438B7F98D802ED37 /* SRPreferences.swift */,
 				63035CF38DA4CCDAEEA99208 /* SRRunSession.swift */,
+				7F1B52CC4DD2B154E9B90338 /* SRTemplateStore.swift */,
 				0451571C94F43C4DB36C59CA /* SRTerminal.swift */,
 				229C4BB81C3CADB888E234A8 /* SRTerminalCatalog.swift */,
 				CCE637E6B82F3B4676248BBE /* SRWindowManager.swift */,
@@ -343,6 +352,7 @@
 				1B5F9D63D304C3D5D9CFE051 /* SREditorCatalog.swift in Sources */,
 				1F9D52FC4F373309C6B8228B /* SREditorTab.swift in Sources */,
 				D69C168FC92137BC99AF2C81 /* SRExtensionStatusBar.swift in Sources */,
+				92E0EF87D007660FEBF8968B /* SRFileTemplate.swift in Sources */,
 				DD6582133A9AE8E7E0DB8F38 /* SRMainMenu.swift in Sources */,
 				C10394B099D740912CD9BF8A /* SRPaths.swift in Sources */,
 				538028588DB613E6B6BCB346 /* SRPlaceholder.swift in Sources */,
@@ -351,6 +361,8 @@
 				C681E926E1BA1C8200828C8A /* SRScriptEditor.swift in Sources */,
 				9270FE06A1CF0179BB9686A1 /* SRSettingsView.swift in Sources */,
 				CF36A5AB2E8230262A172524 /* SRSymbolPicker.swift in Sources */,
+				662441E71221151A0DDB23F6 /* SRTemplateStore.swift in Sources */,
+				8AB46D5164A4D3436AF84D82 /* SRTemplateTab.swift in Sources */,
 				0668805163B1069C3B96FCFF /* SRTerminal.swift in Sources */,
 				5BFFFFB1CD83CF015B84DAA2 /* SRTerminalCatalog.swift in Sources */,
 				2B1992ADF238499343C31A81 /* SRTerminalTab.swift in Sources */,

@@ -7,6 +7,7 @@ struct RootView: View {
     @EnvironmentObject private var model: SRAppModel
     @ObservedObject private var catalog = SRTerminalCatalog.shared
     @ObservedObject private var editors = SREditorCatalog.shared
+    @ObservedObject private var templates = SRTemplateStore.shared
 
     var body: some View {
         NavigationSplitView {
@@ -109,6 +110,23 @@ struct RootView: View {
                                     Label(editor.name, systemImage: "checkmark")
                                 } else {
                                     Text(editor.name)
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if !templates.templates.isEmpty {
+                    Divider()
+                    Section(L("新建文件…")) {
+                        ForEach(templates.templates) { template in
+                            Button {
+                                model.addTemplateCommand(for: template)
+                            } label: {
+                                if model.templateCommand(for: template.id) != nil {
+                                    Label(template.name, systemImage: "checkmark")
+                                } else {
+                                    Text(template.name)
                                 }
                             }
                         }

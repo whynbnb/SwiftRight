@@ -227,6 +227,62 @@ final class SRAppModel: ObservableObject {
         return added
     }
 
+    // MARK: - 从模板生成「新建文件」命令
+
+    func templateCommand(for templateID: UUID) -> SRCommand? {
+        let marker = SRFileTemplate.markerPrefix(for: templateID)
+        return commands.first { $0.script.hasPrefix(marker) }
+    }
+
+    /// 为某个模板生成一条「新建 XX」命令。
+    @discardableResult
+    func addTemplateCommand(for template: SRFileTemplate) -> UUID {
+        if let existing = templateCommand(for: template.id) {
+            selection = existing.id
+            return existing.id
+        }
+
+        var command = SRCommand()
+        command.title = L("新建 %@", template.name)
+        command.symbol = template.symbol
+        // 收进一个分组，右键菜单里就是 Windows 那种「新建 ▸」的形状。
+        command.group = L("新建文件")
+        command.runMode = .background
+        command.script = template.generatedScript()
+        // 仅文件夹：空白处右键（作用于当前文件夹）和选中文件夹时出现，
+        // 右键点在文件上时不出现 —— 和 Windows 的「新建」一致。
+        command.appliesTo = .foldersOnly
+        command.workingDirectory = .selectionItself
+        command.allowsMultipleSelection = false
+        command.sortIndex = commands.count
+
+        commands.append(command)
+        selection = command.id
+        return command.id
+    }
+
+    @discardableResult
+    func addTemplateCommands(for templates: [SRFileTemplate]) -> Int {
+        var added = 0
+        for template in templates where templateCommand(for: template.id) == nil {
+            addTemplateCommand(for: template)
+            added += 1
+        }
+        return added
+    }
+
+    /// 模板改动后同步到已生成的命令。
+    ///
+    /// 只覆盖标题、图标和脚本 —— 分组、启用状态、适用范围这些用户可能
+    /// 自己调过，不该被模板编辑冲掉。
+    func syncTemplateCommand(_ template: SRFileTemplate) {
+        let marker = SRFileTemplate.markerPrefix(for: template.id)
+        guard let index = commands.firstIndex(where: { $0.script.hasPrefix(marker) }) else { return }
+        commands[index].title = L("新建 %@", template.name)
+        commands[index].symbol = template.symbol
+        commands[index].script = template.generatedScript()
+    }
+
     func delete(_ id: UUID) {
         guard let index = commands.firstIndex(where: { $0.id == id }) else { return }
         commands.remove(at: index)
