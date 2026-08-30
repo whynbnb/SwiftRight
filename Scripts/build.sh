@@ -46,9 +46,33 @@ sleep 1
 rm -rf "$DEST"
 cp -R "$BUILT" "$DEST"
 
+# 构建产物一落盘就会被 LaunchServices 自动登记，于是同一个 bundle id
+# 出现多份注册。系统挑哪一份是不确定的 —— 实测过访达菜单被 DerivedData
+# 里的 Debug 副本接管，一旦清理 DerivedData 右键菜单就整个失效。
+# 所以装完必须把构建目录里的副本全部注销，只留 /Applications 这一份。
+echo "==> 注销构建目录里的副本"
+LSREGISTER=/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister
+for stray in \
+  "$BUILD_DIR/Build/Products/Debug/$APP_NAME" \
+  "$BUILD_DIR/Build/Products/Release/$APP_NAME" \
+  "$HOME/Library/Developer/Xcode/DerivedData"/SwiftRight-*/Build/Products/*/"$APP_NAME" ; do
+  [ -d "$stray" ] || continue
+  pluginkit -r "$stray/Contents/PlugIns/FinderExtension.appex" 2>/dev/null || true
+  "$LSREGISTER" -u "$stray" 2>/dev/null || true
+done
+
 echo "==> 注册访达扩展"
+"$LSREGISTER" -f "$DEST" 2>/dev/null || true
 pluginkit -a "$DEST/Contents/PlugIns/FinderExtension.appex" 2>/dev/null || true
-pluginkit -m -p com.apple.FinderSync -vvv 2>/dev/null | grep -i swiftright || true
+sleep 1
+
+ACTIVE=$(pluginkit -m -p com.apple.FinderSync -vvv 2>/dev/null \
+         | grep -A1 "com.swiftright" | grep "Path =" | sed 's/.*Path = //')
+if [ "$ACTIVE" = "$DEST/Contents/PlugIns/FinderExtension.appex" ]; then
+  echo "    生效的扩展: $ACTIVE ✓"
+else
+  echo "    ⚠️  生效的扩展不是 /Applications 那份：${ACTIVE:-未找到}" >&2
+fi
 
 echo
 echo "完成。接下来："
