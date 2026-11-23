@@ -111,7 +111,7 @@ final class FinderSync: FIFinderSync {
                 let holder = NSMenuItem(title: group, action: nil, keyEquivalent: "")
                 holder.submenu = submenu
                 if config.settings.showIcons {
-                    holder.image = symbolImage("folder")
+                    holder.image = symbolImage(config.settings.symbol(for: group))
                 }
                 menu.addItem(holder)
             }

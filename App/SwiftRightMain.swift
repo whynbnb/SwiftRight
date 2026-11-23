@@ -215,6 +215,16 @@ final class SRAppDelegate: NSObject, NSApplicationDelegate {
         SRWindowManager.shared.showAbout()
     }
 
+    @objc func newCommandFromMenu(_ sender: Any?) {
+        SRAppModel.shared.addCommand()
+        SRWindowManager.shared.showManager()
+    }
+
+    @objc func newGroupFromMenu(_ sender: Any?) {
+        SRAppModel.shared.addGroup()
+        SRWindowManager.shared.showSort()
+    }
+
     @objc private func reloadConfig() {
         SRAppModel.shared.load()
         SRAppModel.shared.refreshExtensionStatus()

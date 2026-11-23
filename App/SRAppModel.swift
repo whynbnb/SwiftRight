@@ -110,11 +110,24 @@ final class SRAppModel: ObservableObject {
 
     @discardableResult
     func addCommand() -> UUID {
+        addCommand(in: "")
+    }
+
+    /// 新建命令。`group` 非空时直接放进对应分组，排序窗口里会追加到组末。
+    @discardableResult
+    func addCommand(in group: String) -> UUID {
+        let trimmed = group.trimmingCharacters(in: .whitespaces)
         var command = SRCommand()
         command.title = L("新建命令")
         command.script = L("# 选中的路径会作为 $1 $2 … 传进来，也可以用 {paths}") + "\necho {paths}"
         command.runMode = .captureOutput
+        command.group = trimmed
         command.sortIndex = commands.count
+
+        if !trimmed.isEmpty, !settings.groupOrder.contains(trimmed) {
+            settings.groupOrder.append(trimmed)
+        }
+
         commands.append(command)
         selection = command.id
         return command.id
@@ -425,10 +438,83 @@ final class SRAppModel: ObservableObject {
         } else if let si = next.firstIndex(where: { $0.name == trimmed }) {
             next[si].commands.append(moved)
         } else {
-            next.append(SRCommandSection(name: trimmed, commands: [moved]))
+            // 新分组（或暂时没有命令的空分组）按配置顺序插到对应位置。
+            let ordered = settings.orderedGroups(for: commands)
+            let targetRank = ordered.firstIndex(of: trimmed) ?? ordered.count
+            var insertAt = next.count
+            for (i, section) in next.enumerated() {
+                guard let rank = ordered.firstIndex(of: section.name) else { continue }
+                if rank > targetRank {
+                    insertAt = i
+                    break
+                }
+            }
+            next.insert(SRCommandSection(name: trimmed, commands: [moved]), at: insertAt)
         }
 
         commit(sections: next)
+    }
+
+    /// 新建一个空分组，返回最终使用的名称。
+    @discardableResult
+    func addGroup() -> String {
+        let existing = Set(settings.orderedGroups(for: commands))
+        var name = L("新分组")
+        var index = 2
+        while existing.contains(name) {
+            name = L("新分组 %@", String(index))
+            index += 1
+        }
+        var order = settings.groupOrder
+        order.append(name)
+        settings.groupOrder = order
+        return name
+    }
+
+    /// 重命名分组：同步改所有命令的 group、分组顺序和图标。
+    /// 新名字已经存在时直接合并到那个分组。
+    func renameGroup(from old: String, to newRaw: String) {
+        let oldName = old.trimmingCharacters(in: .whitespaces)
+        let newName = newRaw.trimmingCharacters(in: .whitespaces)
+        guard !oldName.isEmpty, !newName.isEmpty, oldName != newName else { return }
+
+        for index in commands.indices
+        where commands[index].group.trimmingCharacters(in: .whitespaces) == oldName {
+            commands[index].group = newName
+        }
+
+        var icons = settings.groupIcons
+        if let icon = icons.removeValue(forKey: oldName), icons[newName] == nil {
+            icons[newName] = icon
+        }
+        settings.groupIcons = icons
+
+        var order = settings.groupOrder
+        if let index = order.firstIndex(of: oldName) {
+            if order.contains(newName) {
+                order.remove(at: index)
+            } else {
+                order[index] = newName
+            }
+        } else if !order.contains(newName) {
+            order.append(newName)
+        }
+        settings.groupOrder = order
+
+        commit(sections: sections)
+    }
+
+    /// 设置分组图标。空字符串或默认的 folder 会清除自定义图标。
+    func setGroupSymbol(_ symbol: String, for group: String) {
+        let name = group.trimmingCharacters(in: .whitespaces)
+        guard !name.isEmpty else { return }
+        var icons = settings.groupIcons
+        if symbol.isEmpty || symbol == "folder" {
+            icons.removeValue(forKey: name)
+        } else {
+            icons[name] = symbol
+        }
+        settings.groupIcons = icons
     }
 
     /// 把「按分组展开」的数组写回 commands / settings.groupOrder，
@@ -450,7 +536,27 @@ final class SRAppModel: ObservableObject {
         }
 
         commands = flattened
-        settings.groupOrder = order
+
+        // 保留暂时没有命令的空分组，并尽量维持它们原来的位置。
+        var groupOrder: [String] = []
+        for section in sections where !section.name.isEmpty && !section.commands.isEmpty {
+            groupOrder.append(section.name)
+        }
+        for (oldIndex, name) in settings.groupOrder.enumerated() {
+            let trimmed = name.trimmingCharacters(in: .whitespaces)
+            guard !trimmed.isEmpty, !groupOrder.contains(trimmed) else { continue }
+
+            var insertAt = 0
+            for previous in settings.groupOrder[..<oldIndex].reversed() {
+                let candidate = previous.trimmingCharacters(in: .whitespaces)
+                if let index = groupOrder.firstIndex(of: candidate) {
+                    insertAt = index + 1
+                    break
+                }
+            }
+            groupOrder.insert(trimmed, at: insertAt)
+        }
+        settings.groupOrder = groupOrder
 
         if let selection, !commands.contains(where: { $0.id == selection }) {
             self.selection = commands.first?.id

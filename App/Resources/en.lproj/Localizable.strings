@@ -325,3 +325,10 @@
 "更换分组" = "Change group";
 "全部" = "All";
 "拖动调整分组顺序。" = "Drag to reorder groups.";
+"命令" = "Command";
+"新建分组" = "New Group";
+"新分组" = "New Group";
+"新分组 %@" = "New Group %@";
+"选择图标" = "Choose Icon";
+"命令名称" = "Command name";
+"分组名称" = "Group name";

@@ -59,15 +59,30 @@ struct RootView: View {
     }
 
     private func sidebarHeader(_ name: String) -> some View {
-        Text(name.isEmpty ? L("未分组") : name)
-            .font(.caption.weight(.semibold))
-            .foregroundStyle(.secondary)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.top, 8)
-            .selectionDisabled()
-            .moveDisabled(true)
-            .listRowSeparator(.hidden)
-            .listRowBackground(Color.clear)
+        let ungrouped = name.isEmpty
+        return HStack(spacing: 8) {
+            // 淡色底 + 强调色图标：比纯线框图标醒目，又不像实色方块那么重。
+            Image(systemName: ungrouped ? "tray" : model.settings.symbol(for: name))
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(ungrouped ? Color.secondary : Color.accentColor)
+                .frame(width: 18, height: 18)
+                .background(
+                    RoundedRectangle(cornerRadius: 4, style: .continuous)
+                        .fill(ungrouped
+                              ? Color.secondary.opacity(0.12)
+                              : Color.accentColor.opacity(0.16))
+                )
+            Text(ungrouped ? L("未分组") : name)
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.top, 8)
+        .selectionDisabled()
+        .moveDisabled(true)
+        .listRowSeparator(.hidden)
+        .listRowBackground(Color.clear)
     }
 
     private var sidebar: some View {
@@ -156,6 +171,10 @@ struct RootView: View {
             // 模板 10，一个菜单三十多项，根本没法看。
             Menu {
                 Button(L("空白命令")) { model.addCommand() }
+                Button(L("新建分组")) {
+                    SRAppModel.shared.addGroup()
+                    SRWindowManager.shared.showSort()
+                }
                 Divider()
                 terminalMenu
                 editorMenu

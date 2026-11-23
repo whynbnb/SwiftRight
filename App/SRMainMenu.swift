@@ -10,6 +10,7 @@ enum SRMainMenu {
         let main = NSMenu()
         main.addItem(appMenuItem())
         main.addItem(editMenuItem())
+        main.addItem(commandMenuItem())
         main.addItem(windowMenuItem())
         return main
     }
@@ -78,6 +79,23 @@ enum SRMainMenu {
         append(to: menu, L("全选"), #selector(NSText.selectAll(_:)), key: "a")
 
         let item = NSMenuItem(title: L("编辑"), action: nil, keyEquivalent: "")
+        item.submenu = menu
+        return item
+    }
+
+    // MARK: - 命令菜单
+
+    private static func commandMenuItem() -> NSMenuItem {
+        let menu = NSMenu(title: L("命令"))
+
+        // 走响应链到 SRAppDelegate，新建后直接把对应窗口带出来。
+        append(to: menu, L("新建命令"),
+               #selector(SRAppDelegate.newCommandFromMenu(_:)), key: "n")
+        append(to: menu, L("新建分组"),
+               #selector(SRAppDelegate.newGroupFromMenu(_:)), key: "n",
+               modifiers: [.command, .shift])
+
+        let item = NSMenuItem(title: L("命令"), action: nil, keyEquivalent: "")
         item.submenu = menu
         return item
     }
