@@ -332,3 +332,5 @@
 "选择图标" = "Choose Icon";
 "命令名称" = "Command name";
 "分组名称" = "Group name";
+"还没有终端。点上面的「扫描本机终端」，或手动添加。" = "No terminals yet. Use Scan Terminals above, or add one manually.";
+"还没有编辑器。点上面的「扫描本机编辑器」，或手动添加。" = "No editors yet. Use Scan Editors above, or add one manually.";

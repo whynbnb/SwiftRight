@@ -61,7 +61,6 @@ struct SRTemplateTab: View {
             Text(message ?? L("命令会出现在右键菜单的「新建文件」分组里，只在文件夹上和窗口空白处显示。"))
                 .font(.caption)
                 .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
         }
     }
 
@@ -133,7 +132,9 @@ struct SRTemplateTab: View {
                     .foregroundStyle(.secondary)
 
                 SRScriptEditor(text: binding(\.content), pendingInsertion: .constant(nil))
-                    .frame(minHeight: 150)
+                    // 必须给上限：NSTextView 的固有高度等于整段脚本文本的高度，
+                    // 模板内容一长就会把窗口最小高度撑到一千多 pt。
+                    .frame(minHeight: 150, maxHeight: 220)
                     .clipShape(RoundedRectangle(cornerRadius: 6))
                     .overlay(
                         RoundedRectangle(cornerRadius: 6)
@@ -163,7 +164,6 @@ struct SRTemplateTab: View {
         Text(L("生成的命令是一条普通脚本命令，可以在主窗口里继续改。改模板会自动同步到已生成的那条命令。"))
             .font(.caption)
             .foregroundStyle(.secondary)
-            .fixedSize(horizontal: false, vertical: true)
     }
 
     // MARK: - 辅助

@@ -9,10 +9,17 @@ struct SREditorTab: View {
     @State private var scanMessage: String?
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            header
-            list
-            footer
+        // 整页一个 ScrollView，说明文字和列表一起滚动。
+        // 列表单独放在 VStack 里时，长说明文字会把窗口最小高度撑到
+        // 一千多 pt，窗口一打开就被拉成一条细长竖条。
+        ScrollView {
+            VStack(alignment: .leading, spacing: 12) {
+                header
+                list
+                footer
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.bottom, 8)
         }
     }
 
@@ -49,15 +56,22 @@ struct SREditorTab: View {
     }
 
     private var list: some View {
-        ScrollView {
-            LazyVStack(spacing: 6) {
-                ForEach(catalog.editors) { editor in
-                    SREditorRow(editor: editor)
-                }
+        // 和终端页一致：外层整页滚动，这里只按实际行高画背景。
+        LazyVStack(spacing: 6) {
+            if catalog.editors.isEmpty {
+                Text(L("还没有编辑器。点上面的「扫描本机编辑器」，或手动添加。"))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 16)
             }
-            .padding(.vertical, 2)
+            ForEach(catalog.editors) { editor in
+                SREditorRow(editor: editor)
+            }
         }
-        .frame(maxHeight: .infinity)
+        .padding(.vertical, 2)
+        .frame(maxWidth: .infinity, alignment: .top)
         .background(
             RoundedRectangle(cornerRadius: 8)
                 .fill(Color(nsColor: .controlBackgroundColor))

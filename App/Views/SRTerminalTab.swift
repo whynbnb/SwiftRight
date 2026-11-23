@@ -10,10 +10,17 @@ struct SRTerminalTab: View {
     @State private var editingID: String?
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            header
-            list
-            options
+        // 整页一个 ScrollView：说明文字、列表、底部选项一起滚动。
+        // 之前把列表单独放在 VStack 里，长说明文字会把窗口的最小高度
+        // 撑到 1600pt 以上，窗口一打开就变成一条细长的竖条。
+        ScrollView {
+            VStack(alignment: .leading, spacing: 12) {
+                header
+                list
+                options
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.bottom, 8)
         }
     }
 
@@ -54,23 +61,31 @@ struct SRTerminalTab: View {
     // MARK: - 列表
 
     private var list: some View {
-        ScrollView {
-            LazyVStack(spacing: 6) {
-                ForEach(catalog.terminals) { terminal in
-                    SRTerminalRow(
-                        terminal: terminal,
-                        isSelected: terminal.id == catalog.selectedID,
-                        isExpanded: editingID == terminal.id,
-                        onSelect: { catalog.selectedID = terminal.id },
-                        onToggleEdit: {
-                            editingID = editingID == terminal.id ? nil : terminal.id
-                        }
-                    )
-                }
+        // 列表不再自己滚：外层已经是整页滚动，这里只负责按行高画背景，
+        // 行少时不会留下一个拖到窗口底部的空盒子。
+        LazyVStack(spacing: 6) {
+            if catalog.terminals.isEmpty {
+                Text(L("还没有终端。点上面的「扫描本机终端」，或手动添加。"))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 16)
             }
-            .padding(.vertical, 2)
+            ForEach(catalog.terminals) { terminal in
+                SRTerminalRow(
+                    terminal: terminal,
+                    isSelected: terminal.id == catalog.selectedID,
+                    isExpanded: editingID == terminal.id,
+                    onSelect: { catalog.selectedID = terminal.id },
+                    onToggleEdit: {
+                        editingID = editingID == terminal.id ? nil : terminal.id
+                    }
+                )
+            }
         }
-        .frame(maxHeight: .infinity)
+        .padding(.vertical, 2)
+        .frame(maxWidth: .infinity, alignment: .top)
         .background(
             RoundedRectangle(cornerRadius: 8)
                 .fill(Color(nsColor: .controlBackgroundColor))

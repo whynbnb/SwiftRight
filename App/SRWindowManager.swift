@@ -88,9 +88,11 @@ final class SRWindowManager: NSObject, NSWindowDelegate {
         //
         // 注意 fullSizeContentView 下 contentRect 就是整窗尺寸（不像标准
         // 标题栏那样再加 32pt），所以这里给的 820×560 即窗口最终大小。
+        //
+        // 可以自由缩放：内容页都有自己的滚动，侧栏固定 172pt。
         let window = NSWindow(
             contentRect: NSRect(x: 0, y: 0, width: 820, height: 560),
-            styleMask: [.titled, .closable, .fullSizeContentView],
+            styleMask: [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView],
             backing: .buffered,
             defer: false
         )
@@ -99,6 +101,8 @@ final class SRWindowManager: NSObject, NSWindowDelegate {
         window.title = L("设置")
         window.isReleasedWhenClosed = false
         window.delegate = self
+        // 最小尺寸要够放下侧栏和一行说明文字；最大不限。
+        window.contentMinSize = NSSize(width: 600, height: 400)
         window.contentView = NSHostingView(rootView: SRLocalizedRoot {
             SRSettingsView()
                 .environmentObject(SRAppModel.shared)
