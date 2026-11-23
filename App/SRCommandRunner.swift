@@ -4,6 +4,7 @@ import UserNotifications
 /// 真正执行命令的地方。
 ///
 /// 必须待在主 App 里：Finder 扩展是强制沙盒的，在那边 `Process` 起不了外部程序。
+@MainActor
 final class SRCommandRunner: ObservableObject {
 
     static let shared = SRCommandRunner()
@@ -28,7 +29,7 @@ final class SRCommandRunner: ObservableObject {
     func run(command: SRCommand,
              paths: [String],
              targetPath: String?,
-             onNeedsOutputWindow: @escaping () -> Void) {
+             onNeedsOutputWindow: @escaping @MainActor () -> Void) {
 
         guard !paths.isEmpty else { return }
 
@@ -70,7 +71,7 @@ final class SRCommandRunner: ObservableObject {
     }
 
     /// 编辑器里的「试运行」：强制捕获输出，不管命令本身配的是什么模式。
-    func testRun(command: SRCommand, paths: [String], onNeedsOutputWindow: @escaping () -> Void) {
+    func testRun(command: SRCommand, paths: [String], onNeedsOutputWindow: @escaping @MainActor () -> Void) {
         var probe = command
         probe.runMode = .captureOutput
         probe.confirmBeforeRun = false
@@ -89,7 +90,7 @@ final class SRCommandRunner: ObservableObject {
                        workDir: String,
                        context: SRPlaceholder.Context,
                        session: SRRunSession,
-                       onNeedsOutputWindow: @escaping () -> Void) {
+                       onNeedsOutputWindow: @escaping @MainActor () -> Void) {
 
         let process = Process()
         process.currentDirectoryURL = URL(fileURLWithPath: workDir, isDirectory: true)
@@ -117,7 +118,9 @@ final class SRCommandRunner: ObservableObject {
         }
 
         let didTimeOut = SRFlag()
+        let finished = SRFlag()
         process.terminationHandler = { proc in
+            finished.value = true
             stdout.fileHandleForReading.readabilityHandler = nil
             stderr.fileHandleForReading.readabilityHandler = nil
             // 收尾：handler 停掉后管道里可能还有残留。
@@ -130,7 +133,7 @@ final class SRCommandRunner: ObservableObject {
 
             session.finish(exitCode: proc.terminationStatus, timedOut: didTimeOut.value)
 
-            DispatchQueue.main.async {
+            Task { @MainActor in
                 self.handleCompletion(command: command,
                                       session: session,
                                       onNeedsOutputWindow: onNeedsOutputWindow)
@@ -146,11 +149,13 @@ final class SRCommandRunner: ObservableObject {
         }
 
         if command.timeoutSeconds > 0 {
-            let deadline = DispatchTime.now() + .seconds(command.timeoutSeconds)
-            DispatchQueue.global().asyncAfter(deadline: deadline) { [weak process] in
-                guard let process, process.isRunning else { return }
+            // 定时器跑在全局队列上，不能直接持有 Process（非 Sendable）。
+            // 用 pid + 结束标记判断是否还需要发信号。
+            let pid = process.processIdentifier
+            DispatchQueue.global().asyncAfter(deadline: .now() + .seconds(command.timeoutSeconds)) {
+                guard !finished.value else { return }
                 didTimeOut.value = true
-                process.terminate()
+                kill(pid, SIGTERM)
             }
         }
     }
@@ -266,18 +271,19 @@ final class SRCommandRunner: ObservableObject {
                         shell: String,
                         configuration: NSWorkspace.OpenConfiguration) {
 
-        let onError: (Error?) -> Void = { error in
+        // NSWorkspace 的回调不保证在主线程，统一收回主线程再弹错误框。
+        let reportError: @MainActor (Error?) -> Void = { error in
             guard let error else { return }
-            DispatchQueue.main.async {
-                self.presentError(L("无法启动终端：") + error.localizedDescription)
-            }
+            self.presentError(L("无法启动终端：") + error.localizedDescription)
         }
 
         switch terminal.launchStyle {
         case .openScript:
             NSWorkspace.shared.open([file],
                                     withApplicationAt: terminal.url,
-                                    configuration: configuration) { _, error in onError(error) }
+                                    configuration: configuration) { _, error in
+                Task { @MainActor in reportError(error) }
+            }
 
         case .arguments:
             configuration.arguments = terminal.arguments(script: file.path,
@@ -288,7 +294,7 @@ final class SRCommandRunner: ObservableObject {
             configuration.createsNewApplicationInstance = true
             NSWorkspace.shared.openApplication(at: terminal.url,
                                                configuration: configuration) { _, error in
-                onError(error)
+                Task { @MainActor in reportError(error) }
             }
         }
     }
@@ -402,7 +408,7 @@ final class SRCommandRunner: ObservableObject {
 
     private func handleCompletion(command: SRCommand,
                                   session: SRRunSession,
-                                  onNeedsOutputWindow: @escaping () -> Void) {
+                                  onNeedsOutputWindow: @escaping @MainActor () -> Void) {
         let failed = !session.succeeded
 
         if command.notifyOnFinish {
@@ -462,8 +468,7 @@ final class SRCommandRunner: ObservableObject {
 
     private func notify(title: String, body: String) {
         guard Bundle.main.bundleIdentifier != nil else { return }
-        let center = UNUserNotificationCenter.current()
-        center.requestAuthorization(options: [.alert, .sound]) { granted, _ in
+        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { granted, _ in
             guard granted else { return }
             let content = UNMutableNotificationContent()
             content.title = title
@@ -471,7 +476,7 @@ final class SRCommandRunner: ObservableObject {
             let request = UNNotificationRequest(identifier: UUID().uuidString,
                                                 content: content,
                                                 trigger: nil)
-            center.add(request)
+            UNUserNotificationCenter.current().add(request)
         }
     }
 }
@@ -485,7 +490,7 @@ enum SRDefaults {
 ///
 /// 超时定时器和 `terminationHandler` 分别跑在不同队列上，
 /// 直接捕获局部 `var` 在并发检查下是数据竞争。
-final class SRFlag {
+final class SRFlag: @unchecked Sendable {
     private let lock = NSLock()
     private var storage = false
 

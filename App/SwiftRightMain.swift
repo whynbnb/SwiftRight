@@ -4,6 +4,7 @@ import SwiftUI
 
 @main
 enum SwiftRightMain {
+    @MainActor
     static func main() {
         let app = NSApplication.shared
         let delegate = SRAppDelegate()
@@ -14,6 +15,7 @@ enum SwiftRightMain {
     }
 }
 
+@MainActor
 final class SRAppDelegate: NSObject, NSApplicationDelegate {
 
     static var retained: SRAppDelegate?
@@ -71,7 +73,7 @@ final class SRAppDelegate: NSObject, NSApplicationDelegate {
     private func observeLanguageChanges() {
         SRPreferences.shared.languageDidChange
             .receive(on: RunLoop.main)
-            .sink { [weak self] in
+            .sink { @MainActor [weak self] in
                 NSApp.mainMenu = SRMainMenu.build()
                 self?.rebuildStatusMenu()
                 SRWindowManager.shared.refreshWindowTitles()
@@ -82,7 +84,7 @@ final class SRAppDelegate: NSObject, NSApplicationDelegate {
     private func observePreferenceChanges() {
         SRPreferences.shared.residencyDidChange
             .receive(on: RunLoop.main)
-            .sink { [weak self] in self?.applyResidency() }
+            .sink { @MainActor [weak self] in self?.applyResidency() }
             .store(in: &cancellables)
     }
 
@@ -112,7 +114,9 @@ final class SRAppDelegate: NSObject, NSApplicationDelegate {
     func scheduleIdleQuitCheck() {
         guard SRPreferences.shared.residency == .autoQuit else { return }
         idleQuitCheck?.cancel()
-        let work = DispatchWorkItem { [weak self] in self?.quitIfIdle() }
+        let work = DispatchWorkItem { [weak self] in
+            MainActor.assumeIsolated { self?.quitIfIdle() }
+        }
         idleQuitCheck = work
         DispatchQueue.main.asyncAfter(deadline: .now() + 3, execute: work)
     }

@@ -57,7 +57,8 @@ final class SRUTF8Decoder {
 }
 
 /// 一次命令执行的可观察状态。输出窗口直接绑定它。
-final class SRRunSession: ObservableObject, Identifiable {
+/// 内部解码状态由锁保护，UI 状态统一回主线程，可以安全跨线程持有。
+final class SRRunSession: ObservableObject, Identifiable, @unchecked Sendable {
 
     enum Stream { case standardOutput, standardError }
 

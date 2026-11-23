@@ -12,6 +12,7 @@ import UniformTypeIdentifiers
 /// 另一处不同：编辑器没有"全局默认"。终端需要它是因为「在终端中运行」
 /// 这个运行方式本身要挑一个终端；而编辑器命令生成时就把 bundle id 写进
 /// 脚本了，每条命令自带目标。
+@MainActor
 final class SREditorCatalog: ObservableObject {
 
     static let shared = SREditorCatalog()

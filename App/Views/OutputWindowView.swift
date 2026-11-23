@@ -16,7 +16,7 @@ struct OutputWindowView: View {
         }
         .frame(minWidth: 480, minHeight: 300)
         .onAppear(perform: syncSelection)
-        .onChange(of: runner.focusedSession?.id) { syncSelection() }
+        .onChange(of: runner.focusedSession?.id) { _, _ in syncSelection() }
     }
 
     // MARK: - 记录列表
@@ -214,7 +214,7 @@ private struct SRSessionDetailView: View {
                     .id("output-bottom")
             }
             .background(Color(nsColor: .textBackgroundColor))
-            .onChange(of: session.output) {
+            .onChange(of: session.output) { _, _ in
                 // 跟着新输出往下滚，像终端一样。
                 withAnimation(.linear(duration: 0.1)) {
                     proxy.scrollTo("output-bottom", anchor: .bottom)

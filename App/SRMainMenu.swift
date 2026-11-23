@@ -4,6 +4,7 @@ import AppKit
 ///
 /// 走的是纯 AppKit 的 `NSApp.run()` 入口，没有 MainMenu.nib，
 /// 不建这套菜单的话 ⌘Q / ⌘C / ⌘V / ⌘Z 全都不会响应。
+@MainActor
 enum SRMainMenu {
 
     static func build() -> NSMenu {

@@ -6,6 +6,7 @@ import SwiftUI
 /// SwiftRight 平时是 `.accessory` 的（不占 Dock、不抢焦点），
 /// 而 `.accessory` 状态下没有菜单栏，脚本编辑框里的 ⌘C/⌘V/⌘Z 就会失效。
 /// 所以策略是：只要还有可见窗口就切 `.regular`，全关掉再切回 `.accessory`。
+@MainActor
 final class SRWindowManager: NSObject, NSWindowDelegate {
 
     static let shared = SRWindowManager()
@@ -234,6 +235,7 @@ final class SRWindowManager: NSObject, NSWindowDelegate {
 // MARK: - 破坏性操作确认
 
 /// 删除这类不可撤销的操作统一走原生确认框，避免误触。
+@MainActor
 enum SRConfirm {
 
     /// 返回 true 表示用户点了确认。

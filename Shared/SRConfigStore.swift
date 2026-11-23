@@ -4,7 +4,9 @@ import Foundation
 ///
 /// 扩展的 `menu(for:)` 每次右键都会被调用，所以这里按 mtime 做缓存，
 /// 没改动就不重复解析 JSON。
-final class SRConfigStore {
+///
+/// 内部状态全部由串行队列保护，所以允许跨线程共享。
+final class SRConfigStore: @unchecked Sendable {
 
     static let shared = SRConfigStore()
 

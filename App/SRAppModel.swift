@@ -4,6 +4,7 @@ import FinderSync
 import SwiftUI
 
 /// 管理界面的单一数据源。所有编辑都直接改内存里的 config，然后节流写盘。
+@MainActor
 final class SRAppModel: ObservableObject {
 
     static let shared = SRAppModel()
@@ -31,7 +32,7 @@ final class SRAppModel: ObservableObject {
         Publishers.CombineLatest($commands, $settings)
             .dropFirst()
             .debounce(for: .milliseconds(400), scheduler: RunLoop.main)
-            .sink { [weak self] _ in self?.save() }
+            .sink { @MainActor [weak self] _ in self?.save() }
             .store(in: &cancellables)
     }
 
@@ -351,7 +352,7 @@ final class SRAppModel: ObservableObject {
         var row = 0
         for (si, section) in current.enumerated() {
             row += 1 // 分组标题
-            for (ci, command) in section.commands.enumerated() {
+            for ci in section.commands.indices {
                 if row == sourceRow { source = (si, ci) }
                 row += 1
             }

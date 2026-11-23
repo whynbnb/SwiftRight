@@ -38,8 +38,8 @@ struct SRCommandEditorView: View {
         }
         .frame(maxWidth: .infinity)
         .onAppear(perform: syncLocalState)
-        .onChange(of: command.id) { syncLocalState() }
-        .onChange(of: extensionsText) { applyExtensions() }
+        .onChange(of: command.id) { _, _ in syncLocalState() }
+        .onChange(of: extensionsText) { _, _ in applyExtensions() }
     }
 
     // MARK: - 排布

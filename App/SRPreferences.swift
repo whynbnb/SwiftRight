@@ -91,7 +91,9 @@ enum SRResidencyMode: String, CaseIterable, Identifiable, Codable {
 /// 这些设置访达扩展一概用不到，没必要塞进那份共享配置里。
 final class SRPreferences: ObservableObject {
 
-    static let shared = SRPreferences()
+    // 语言/主题这些偏好只在主线程改；取词（localized）会在后台读，
+    // 但读到的只是不可变快照，这里显式说明共享是安全的。
+    nonisolated(unsafe) static let shared = SRPreferences()
 
     @Published var language: SRLanguage {
         didSet {
@@ -135,7 +137,15 @@ final class SRPreferences: ObservableObject {
     let residencyDidChange = PassthroughSubject<Void, Never>()
 
     private let defaults = UserDefaults.standard
-    private var localizedBundle: Bundle?
+
+    /// 取词用的只读快照。`localized(_:)` 可能在后台线程被调用（比如命令输出
+    /// 的状态文案），所以这里用锁保护，而不是直接读 @Published 的 language。
+    private struct Localizer: @unchecked Sendable {
+        let isEnglish: Bool
+        let bundle: Bundle?
+    }
+    private let localizerLock = NSLock()
+    private var localizer = Localizer(isEnglish: false, bundle: nil)
 
     private enum Keys {
         static let language = "preferredLanguage"
@@ -170,25 +180,37 @@ final class SRPreferences: ObservableObject {
     /// 中文时返回 key 本身，英文时查 en.lproj/Localizable.strings。
     /// 查不到就回退成中文原文 —— 界面会中英混排，但至少不会显示成裸 key。
     func localized(_ key: String) -> String {
-        guard effectiveLanguage == .english, let bundle = localizedBundle else { return key }
+        localizerLock.lock()
+        let snapshot = localizer
+        localizerLock.unlock()
+        guard snapshot.isEnglish, let bundle = snapshot.bundle else { return key }
         return bundle.localizedString(forKey: key, value: key, table: "Localizable")
     }
 
     private func resolveBundle() {
-        guard effectiveLanguage == .english,
-              let path = Bundle.main.path(forResource: "en", ofType: "lproj"),
-              let bundle = Bundle(path: path)
-        else {
-            localizedBundle = nil
-            return
-        }
-        localizedBundle = bundle
+        let isEnglish = effectiveLanguage == .english
+        let bundle: Bundle? = {
+            guard isEnglish,
+                  let path = Bundle.main.path(forResource: "en", ofType: "lproj")
+            else { return nil }
+            return Bundle(path: path)
+        }()
+        localizerLock.lock()
+        localizer = Localizer(isEnglish: isEnglish, bundle: bundle)
+        localizerLock.unlock()
     }
 
     // MARK: - 主题
 
+    /// AppKit 的外观只能在主线程改。`theme` 是值类型，先快照再切换隔离域，
+    /// 避免把 self 或 NSAppearance 这些非 Sendable 对象带过去。
     func applyTheme() {
-        NSApp.appearance = theme.appearance
+        let theme = self.theme
+        if Thread.isMainThread {
+            MainActor.assumeIsolated { NSApp.appearance = theme.appearance }
+        } else {
+            Task { @MainActor in NSApp.appearance = theme.appearance }
+        }
     }
 }
 

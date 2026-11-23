@@ -6,7 +6,10 @@ import FinderSync
 /// 这里刻意保持"薄"：只负责读配置、拼菜单、把点击事件转成一张凭据丢给主 App。
 /// 真正执行命令必须放在非沙盒的主 App 里 —— app extension 强制沙盒，
 /// 在扩展里 `Process` 起任何外部程序都会被拒绝。
-final class FinderSync: FIFinderSync {
+/// 访达扩展的入口。回调（`menu(for:)`、菜单点击、卷挂载通知）都由系统
+/// 在主线程投递，内部状态也只在那里改；这里显式声明共享安全，避免
+/// Swift 6 把闭包捕获当成跨线程传递。
+final class FinderSync: FIFinderSync, @unchecked Sendable {
 
     /// tag → 命令 ID。NSMenuItem 跨进程代理到 Finder 时只有少数属性能存活，
     /// `representedObject` 不在其中，所以用 Int tag 做索引。
@@ -170,10 +173,12 @@ final class FinderSync: FIFinderSync {
     /// 扩展进程的 `effectiveAppearance` 不一定跟随访达（有可能一直停在 aqua），
     /// 所以再读一遍全局的 `AppleInterfaceStyle` 兜底。
     private static func prefersDarkAppearance() -> Bool {
-        if let appearance = NSApp?.effectiveAppearance,
-           appearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua {
-            return true
+        // menu(for:) 由访达在主线程调用，这里直接按主线程读取外观。
+        let isDark = MainActor.assumeIsolated { () -> Bool in
+            guard let appearance = NSApp?.effectiveAppearance else { return false }
+            return appearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
         }
+        if isDark { return true }
         return UserDefaults.standard
             .string(forKey: "AppleInterfaceStyle")?
             .caseInsensitiveCompare("Dark") == .orderedSame
@@ -278,7 +283,7 @@ final class FinderSync: FIFinderSync {
 
         do {
             let url = try SRTicket.write(ticket)
-            deliver(url) { [weak self] delivered in
+            Self.deliver(url) { [weak self] delivered in
                 guard !delivered else { return }
                 // URL scheme 还没被 LaunchServices 认到。
                 self?.launchHostApp(thenRetry: ticket)
@@ -300,11 +305,11 @@ final class FinderSync: FIFinderSync {
     /// 但 SwiftRight 在这里只是收凭据、在后台跑命令，被拉到前台纯属副作用：
     /// 主窗口开着时会看到它抢一下焦点再让给 VS Code，没开窗口时 accessory
     /// 状态的它也会顶掉菜单栏。真正该拿到前台的是命令自己拉起来的那些 App。
-    private func deliver(_ url: URL, completion: @escaping (Bool) -> Void) {
+    private static func deliver(_ url: URL, completion: @escaping @MainActor (Bool) -> Void) {
         let configuration = NSWorkspace.OpenConfiguration()
         configuration.activates = false
         NSWorkspace.shared.open(url, configuration: configuration) { _, error in
-            completion(error == nil)
+            Task { @MainActor in completion(error == nil) }
         }
     }
 
@@ -329,13 +334,14 @@ final class FinderSync: FIFinderSync {
                 NSLog("[SwiftRight] 启动宿主 App 失败: \(error.localizedDescription)")
                 return
             }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+            Task { @MainActor in
+                try? await Task.sleep(for: .milliseconds(800))
                 guard let url = try? SRTicket.write(ticket) else {
                     NSLog("[SwiftRight] 重试写入凭据仍然失败")
                     return
                 }
                 // 重试这一路同样不激活，理由见 deliver(_:completion:)。
-                self.deliver(url) { delivered in
+                Self.deliver(url) { delivered in
                     if !delivered { NSLog("[SwiftRight] 重试投递凭据失败") }
                 }
             }

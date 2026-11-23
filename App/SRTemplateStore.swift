@@ -3,6 +3,7 @@ import Foundation
 
 /// 文件模板库。存 UserDefaults —— 访达扩展用不到它，
 /// 它只在"生成右键命令"这一刻起作用，生成出来的是普通命令。
+@MainActor
 final class SRTemplateStore: ObservableObject {
 
     static let shared = SRTemplateStore()

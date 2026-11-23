@@ -6,6 +6,7 @@ import UniformTypeIdentifiers
 ///
 /// 存在 UserDefaults 而不是 commands.json —— 访达扩展用不到这些，
 /// 没必要塞进那份共享配置。
+@MainActor
 final class SRTerminalCatalog: ObservableObject {
 
     static let shared = SRTerminalCatalog()

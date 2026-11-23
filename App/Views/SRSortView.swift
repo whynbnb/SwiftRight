@@ -45,7 +45,7 @@ struct SRSortView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color(nsColor: .windowBackgroundColor))
-        .onChange(of: model.sections.map(\.name)) { names in
+        .onChange(of: model.sections.map(\.name)) { _, names in
             // 当前筛选的分组被删空/改名后，回到「全部」。
             switch filter {
             case .ungrouped:
@@ -382,7 +382,7 @@ private struct SRGroupHeader: View {
     var body: some View {
         HStack(spacing: 6) {
             SRSymbolPicker(
-                symbol: Binding(get: { symbol }, set: onSymbol),
+                symbol: Binding(get: { symbol }, set: { onSymbol($0) }),
                 compact: true,
                 compactTint: .accentColor
             )
@@ -393,13 +393,13 @@ private struct SRGroupHeader: View {
                 .lineLimit(1)
                 .focused($focused)
                 .onSubmit { commit() }
-                .onChange(of: focused) { isFocused in
+                .onChange(of: focused) { _, isFocused in
                     if !isFocused { commit() }
                 }
 
             Spacer(minLength: 0)
         }
-        .onChange(of: name) { newName in
+        .onChange(of: name) { _, newName in
             if !focused { draft = newName }
         }
     }

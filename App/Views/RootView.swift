@@ -21,7 +21,7 @@ struct RootView: View {
         .frame(minWidth: 760, minHeight: 460)
         .toolbar { toolbarContent }
         .onAppear { model.refreshExtensionStatus() }
-        .onChange(of: columnVisibility) { forceRelayout() }
+        .onChange(of: columnVisibility) { _, _ in forceRelayout() }
     }
 
     /// macOS 26 折叠侧栏后，详情列的背景层有时还停在展开时的宽度，
@@ -387,6 +387,7 @@ struct SRConfigDocument: FileDocument {
 
     private let data: Data
 
+    @MainActor
     init(model: SRAppModel) {
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
