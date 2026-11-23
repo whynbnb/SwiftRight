@@ -36,6 +36,7 @@
 		92E0EF87D007660FEBF8968B /* SRFileTemplate.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCB29CDD4E75B396B430762B /* SRFileTemplate.swift */; };
 		9562F5B906D0F6908C17E076 /* SRTicket.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BC99858BDF590DE8045C54F /* SRTicket.swift */; };
 		A01657C2B09AC086ED89A9A7 /* FinderSync.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 325F7719C72FD29BD573D30B /* FinderSync.framework */; };
+		A5DB320030E7A42F77CBAE39 /* SRSortView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C5908AE1105C85F0C6B5A2B /* SRSortView.swift */; };
 		A684D615D95908E097620DEE /* SRCommandEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FEB80F52100A0557047743E /* SRCommandEditorView.swift */; };
 		B8E88B43AA72BF39A2627CE3 /* SRRunSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63035CF38DA4CCDAEEA99208 /* SRRunSession.swift */; };
 		C10394B099D740912CD9BF8A /* SRPaths.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22CD14746B42C16B4D63D233 /* SRPaths.swift */; };
@@ -98,6 +99,7 @@
 		63035CF38DA4CCDAEEA99208 /* SRRunSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SRRunSession.swift; sourceTree = "<group>"; };
 		67A90FE023627FEA622B014B /* SRTerminalTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SRTerminalTab.swift; sourceTree = "<group>"; };
 		6ADCB146689C8EA418DD022F /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
+		6C5908AE1105C85F0C6B5A2B /* SRSortView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SRSortView.swift; sourceTree = "<group>"; };
 		7772906F4E9915B52682B9E5 /* FinderExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = FinderExtension.entitlements; sourceTree = "<group>"; };
 		78B5E8CBAEBA9076B0E31D3D /* SRPlaceholder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SRPlaceholder.swift; sourceTree = "<group>"; };
 		7F1B52CC4DD2B154E9B90338 /* SRTemplateStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SRTemplateStore.swift; sourceTree = "<group>"; };
@@ -162,6 +164,7 @@
 				BB7A745ECD048BBD818B18C3 /* SRExtensionStatusBar.swift */,
 				EC8DBDD1995D0562BE3F03F0 /* SRScriptEditor.swift */,
 				974ABC296C24049A946537E9 /* SRSettingsView.swift */,
+				6C5908AE1105C85F0C6B5A2B /* SRSortView.swift */,
 				B86EA23B335B0A275A356E12 /* SRSymbolPicker.swift */,
 				1DADA3E0294DF4AAF74453C3 /* SRTemplateTab.swift */,
 				67A90FE023627FEA622B014B /* SRTerminalTab.swift */,
@@ -293,7 +296,7 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
-				LastUpgradeCheck = 1430;
+				LastUpgradeCheck = 1600;
 				TargetAttributes = {
 					630CDECE5E534A0E4D499990 = {
 						DevelopmentTeam = N92PMG7782;
@@ -364,6 +367,7 @@
 				B8E88B43AA72BF39A2627CE3 /* SRRunSession.swift in Sources */,
 				C681E926E1BA1C8200828C8A /* SRScriptEditor.swift in Sources */,
 				9270FE06A1CF0179BB9686A1 /* SRSettingsView.swift in Sources */,
+				A5DB320030E7A42F77CBAE39 /* SRSortView.swift in Sources */,
 				CF36A5AB2E8230262A172524 /* SRSymbolPicker.swift in Sources */,
 				662441E71221151A0DDB23F6 /* SRTemplateStore.swift in Sources */,
 				8AB46D5164A4D3436AF84D82 /* SRTemplateTab.swift in Sources */,

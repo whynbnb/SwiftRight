@@ -86,38 +86,34 @@ final class FinderSync: FIFinderSync {
         tagToCommandID.removeAll()
         var nextTag = 1
 
-        // 把命令按 group 归拢，同时保留组内和组之间的原始顺序。
-        var groupOrder: [String] = []
-        var grouped: [String: [SRCommand]] = [:]
-        for command in candidates {
-            let key = command.group.trimmingCharacters(in: .whitespaces)
-            if grouped[key] == nil {
-                grouped[key] = []
-                groupOrder.append(key)
-            }
-            grouped[key]?.append(command)
+        // 未分组命令放最前面；分组按 settings.groupOrder 排，
+        // 没列进去的分组按首次出现顺序补在后面。
+        let ungrouped = candidates.filter {
+            $0.group.trimmingCharacters(in: .whitespaces).isEmpty
         }
+        let groupNames = config.settings.orderedGroups(for: candidates)
 
         func buildItems(into menu: NSMenu) {
-            for group in groupOrder {
-                guard let commands = grouped[group] else { continue }
+            for command in ungrouped {
+                menu.addItem(makeItem(for: command, tag: &nextTag, settings: config.settings))
+            }
 
-                if group.isEmpty {
-                    for command in commands {
-                        menu.addItem(makeItem(for: command, tag: &nextTag, settings: config.settings))
-                    }
-                } else {
-                    let submenu = NSMenu(title: group)
-                    for command in commands {
-                        submenu.addItem(makeItem(for: command, tag: &nextTag, settings: config.settings))
-                    }
-                    let holder = NSMenuItem(title: group, action: nil, keyEquivalent: "")
-                    holder.submenu = submenu
-                    if config.settings.showIcons {
-                        holder.image = symbolImage("folder")
-                    }
-                    menu.addItem(holder)
+            for group in groupNames {
+                let commands = candidates.filter {
+                    $0.group.trimmingCharacters(in: .whitespaces) == group
                 }
+                guard !commands.isEmpty else { continue }
+
+                let submenu = NSMenu(title: group)
+                for command in commands {
+                    submenu.addItem(makeItem(for: command, tag: &nextTag, settings: config.settings))
+                }
+                let holder = NSMenuItem(title: group, action: nil, keyEquivalent: "")
+                holder.submenu = submenu
+                if config.settings.showIcons {
+                    holder.image = symbolImage("folder")
+                }
+                menu.addItem(holder)
             }
         }
 

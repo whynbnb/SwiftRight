@@ -297,21 +297,169 @@ final class SRAppModel: ObservableObject {
             : commands.last?.id
     }
 
-    func move(from source: IndexSet, to destination: Int) {
-        commands.move(fromOffsets: source, toOffset: destination)
+    // MARK: - 分组与排序
+
+    /// 侧边栏和排序窗口共用的分组视图。未分组永远在最前面。
+    var sections: [SRCommandSection] {
+        let ordered = settings.orderedGroups(for: commands)
+        var result: [SRCommandSection] = []
+
+        let ungrouped = commands
+            .filter { $0.group.trimmingCharacters(in: .whitespaces).isEmpty }
+            .sorted { $0.sortIndex < $1.sortIndex }
+        if !ungrouped.isEmpty {
+            result.append(SRCommandSection(name: "", commands: ungrouped))
+        }
+
+        for group in ordered {
+            let items = commands
+                .filter { $0.group.trimmingCharacters(in: .whitespaces) == group }
+                .sorted { $0.sortIndex < $1.sortIndex }
+            if !items.isEmpty {
+                result.append(SRCommandSection(name: group, commands: items))
+            }
+        }
+        return result
     }
 
-    /// 已经用过的分组名，供编辑器做补全。
-    var knownGroups: [String] {
-        var seen = Set<String>()
-        var result: [String] = []
-        for command in commands {
-            let group = command.group.trimmingCharacters(in: .whitespaces)
-            guard !group.isEmpty, !seen.contains(group) else { continue }
-            seen.insert(group)
-            result.append(group)
+    /// 排序窗口左侧的分组顺序。
+    var sortGroupNames: [String] {
+        settings.orderedGroups(for: commands)
+    }
+
+    /// 侧边栏拖拽。`from` / `to` 是「分组标题 + 命令」扁平行里的索引；
+    /// 落到哪个分组，就把命令的 group 改到哪个分组。
+    func moveSidebarRow(from sourceRow: Int, to destinationRow: Int) {
+        let current = sections
+        guard !current.isEmpty else { return }
+
+        // 被拖的命令在第几个分组、组内第几项。
+        var source: (section: Int, offset: Int)?
+        var row = 0
+        for (si, section) in current.enumerated() {
+            row += 1 // 分组标题
+            for (ci, command) in section.commands.enumerated() {
+                if row == sourceRow { source = (si, ci) }
+                row += 1
+            }
         }
-        return result.sorted { $0.localizedStandardCompare($1) == .orderedAscending }
+        guard let source else { return } // 标题行不可拖
+
+        // 落点对应的分组和组内偏移。
+        var targetSection = current.count - 1
+        var targetOffset = current.last?.commands.count ?? 0
+        row = 0
+        for (si, section) in current.enumerated() {
+            let headerRow = row
+            let firstRow = row + 1
+            let lastRow = row + section.commands.count
+
+            if destinationRow <= headerRow {
+                if si == 0 {
+                    targetSection = 0
+                    targetOffset = 0
+                } else {
+                    // 落在标题上方 = 上一个分组的末尾
+                    targetSection = si - 1
+                    targetOffset = current[si - 1].commands.count
+                }
+                break
+            }
+            if destinationRow <= lastRow {
+                targetSection = si
+                targetOffset = destinationRow - firstRow
+                break
+            }
+            row = lastRow + 1
+        }
+
+        var next = current
+        let moved = next[source.section].commands.remove(at: source.offset)
+        if targetSection == source.section && source.offset < targetOffset {
+            targetOffset -= 1
+        }
+        targetOffset = min(max(targetOffset, 0), next[targetSection].commands.count)
+        next[targetSection].commands.insert(moved, at: targetOffset)
+
+        commit(sections: next)
+    }
+
+    /// 排序窗口：同一分组内拖动命令。按分组名定位，筛选状态下也不会错位。
+    func moveCommand(inSectionNamed name: String, from offsets: IndexSet, to destination: Int) {
+        var next = sections
+        guard let index = next.firstIndex(where: { $0.name == name }) else { return }
+        next[index].commands.move(fromOffsets: offsets, toOffset: destination)
+        commit(sections: next)
+    }
+
+    /// 排序窗口：拖动分组调整分组之间的顺序。
+    func moveGroup(from offsets: IndexSet, to destination: Int) {
+        var names = settings.orderedGroups(for: commands)
+        names.move(fromOffsets: offsets, toOffset: destination)
+        settings.groupOrder = names
+        commit(sections: sections)
+    }
+
+    /// 排序窗口：用下拉菜单更换命令的分组。
+    func changeGroup(for id: UUID, to group: String) {
+        let trimmed = group.trimmingCharacters(in: .whitespaces)
+        guard let index = commands.firstIndex(where: { $0.id == id }) else { return }
+        guard commands[index].group.trimmingCharacters(in: .whitespaces) != trimmed else { return }
+
+        var next = sections
+        var moved: SRCommand?
+        for si in next.indices {
+            if let ci = next[si].commands.firstIndex(where: { $0.id == id }) {
+                moved = next[si].commands.remove(at: ci)
+                break
+            }
+        }
+        guard let moved else { return }
+
+        if trimmed.isEmpty {
+            if next.first?.name == "" {
+                next[0].commands.append(moved)
+            } else {
+                next.insert(SRCommandSection(name: "", commands: [moved]), at: 0)
+            }
+        } else if let si = next.firstIndex(where: { $0.name == trimmed }) {
+            next[si].commands.append(moved)
+        } else {
+            next.append(SRCommandSection(name: trimmed, commands: [moved]))
+        }
+
+        commit(sections: next)
+    }
+
+    /// 把「按分组展开」的数组写回 commands / settings.groupOrder，
+    /// 同时把 sortIndex 重新编号。空分组会被丢掉。
+    private func commit(sections: [SRCommandSection]) {
+        var flattened: [SRCommand] = []
+        var order: [String] = []
+        var index = 0
+
+        for section in sections {
+            guard !section.commands.isEmpty else { continue }
+            if !section.name.isEmpty { order.append(section.name) }
+            for var command in section.commands {
+                command.group = section.name
+                command.sortIndex = index
+                index += 1
+                flattened.append(command)
+            }
+        }
+
+        commands = flattened
+        settings.groupOrder = order
+
+        if let selection, !commands.contains(where: { $0.id == selection }) {
+            self.selection = commands.first?.id
+        }
+    }
+
+    /// 已经用过的分组名，供编辑器做补全。顺序跟右键菜单一致。
+    var knownGroups: [String] {
+        sortGroupNames
     }
 
     // MARK: - 导入导出
@@ -402,4 +550,12 @@ final class SRAppModel: ObservableObject {
         process.arguments = ["Finder"]
         try? process.run()
     }
+}
+
+/// 侧边栏和排序窗口共用的分组视图。`name` 为空表示「未分组」。
+struct SRCommandSection: Identifiable {
+    let name: String
+    var commands: [SRCommand]
+
+    var id: String { name }
 }

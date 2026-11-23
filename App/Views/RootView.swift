@@ -38,18 +38,64 @@ struct RootView: View {
 
     // MARK: - 侧边栏
 
+    /// 侧边栏的扁平行：分组标题 + 命令。
+    /// 拖拽时 `onMove` 给的是这个数组里的下标，模型据此判断落到了哪个分组。
+    private enum SidebarRow: Identifiable {
+        case header(String)
+        case command(UUID)
+
+        var id: String {
+            switch self {
+            case .header(let name): return "h:\(name)"
+            case .command(let id): return "c:\(id.uuidString)"
+            }
+        }
+    }
+
+    private var sidebarRows: [SidebarRow] {
+        model.sections.flatMap { section in
+            [.header(section.name)] + section.commands.map { .command($0.id) }
+        }
+    }
+
+    private func sidebarHeader(_ name: String) -> some View {
+        Text(name.isEmpty ? L("未分组") : name)
+            .font(.caption.weight(.semibold))
+            .foregroundStyle(.secondary)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.top, 8)
+            .selectionDisabled()
+            .moveDisabled(true)
+            .listRowSeparator(.hidden)
+            .listRowBackground(Color.clear)
+    }
+
     private var sidebar: some View {
         VStack(spacing: 0) {
             List(selection: $model.selection) {
-                ForEach($model.commands) { $command in
-                    SRCommandRow(command: $command,
-                                 isSelected: model.selection == command.id)
-                        .tag(command.id)
+                ForEach(sidebarRows) { row in
+                    switch row {
+                    case .header(let name):
+                        sidebarHeader(name)
+                    case .command(let id):
+                        if let binding = model.binding(for: id) {
+                            SRCommandRow(command: binding,
+                                         isSelected: model.selection == id)
+                                .tag(id)
+                        }
+                    }
                 }
-                .onMove { model.move(from: $0, to: $1) }
+                .onMove { offsets, destination in
+                    guard let source = offsets.first else { return }
+                    model.moveSidebarRow(from: source, to: destination)
+                }
                 .onDelete { offsets in
-                    // 先取 id 再删。边遍历索引边删会因为位移而删错项。
-                    let ids = offsets.map { model.commands[$0].id }
+                    // 标题行不参与删除，只取命令行。
+                    let ids: [UUID] = offsets.compactMap { index in
+                        guard sidebarRows.indices.contains(index),
+                              case .command(let id) = sidebarRows[index] else { return nil }
+                        return id
+                    }
                     for id in ids { model.delete(id) }
                 }
             }
@@ -126,6 +172,12 @@ struct RootView: View {
             // 低频操作收进右侧的「更多」：删除和运行输出。
             // 设置不放在工具栏 —— 菜单栏和 ⌘, 都已经有入口了。
             Menu {
+                Button {
+                    SRWindowManager.shared.showSort()
+                } label: {
+                    Label(L("排序…"), systemImage: "arrow.up.arrow.down")
+                }
+
                 Button {
                     SRWindowManager.shared.showOutput()
                 } label: {
@@ -229,16 +281,9 @@ private struct SRCommandRow: View {
                 .frame(width: 18)
                 .foregroundStyle(iconStyle)
 
-            VStack(alignment: .leading, spacing: 1) {
-                Text(command.title)
-                    .lineLimit(1)
-                    .foregroundStyle(titleStyle)
-                if !command.group.isEmpty {
-                    Text(command.group)
-                        .font(.caption2)
-                        .foregroundStyle(groupStyle)
-                }
-            }
+            Text(command.title)
+                .lineLimit(1)
+                .foregroundStyle(titleStyle)
 
             Spacer(minLength: 4)
 
@@ -272,11 +317,6 @@ private struct SRCommandRow: View {
             return AnyShapeStyle(Color.primary.opacity(command.isEnabled ? 1 : 0.6))
         }
         return AnyShapeStyle(command.isEnabled ? .primary : .secondary)
-    }
-
-    private var groupStyle: AnyShapeStyle {
-        if isSelected { return AnyShapeStyle(Color.primary.opacity(0.75)) }
-        return AnyShapeStyle(.tertiary)
     }
 
     private var iconName: String {

@@ -175,11 +175,13 @@ struct SRSettings: Codable, Hashable {
     var menuSymbol: String = "bolt.circle"
     /// 在菜单项里显示图标。
     var showIcons: Bool = true
+    /// 分组的显示顺序。没列在这里的分组按首次出现顺序补在后面。
+    var groupOrder: [String] = []
 
     init() {}
 
     enum CodingKeys: String, CodingKey {
-        case menuTitle, useSubmenu, menuSymbol, showIcons
+        case menuTitle, useSubmenu, menuSymbol, showIcons, groupOrder
     }
 
     init(from decoder: Decoder) throws {
@@ -188,6 +190,36 @@ struct SRSettings: Codable, Hashable {
         useSubmenu = try c.decodeIfPresent(Bool.self, forKey: .useSubmenu) ?? true
         menuSymbol = try c.decodeIfPresent(String.self, forKey: .menuSymbol) ?? "bolt.circle"
         showIcons = try c.decodeIfPresent(Bool.self, forKey: .showIcons) ?? true
+        groupOrder = try c.decodeIfPresent([String].self, forKey: .groupOrder) ?? []
+    }
+}
+
+extension SRSettings {
+    /// 按配置的 `groupOrder` 排分组，没列进去的按首次出现顺序补在后面。
+    /// App 的侧边栏和访达菜单共用这一份顺序。
+    func orderedGroups(for commands: [SRCommand]) -> [String] {
+        let existing = Set(commands
+            .map { $0.group.trimmingCharacters(in: .whitespaces) }
+            .filter { !$0.isEmpty })
+
+        var seen = Set<String>()
+        var ordered: [String] = []
+
+        for name in groupOrder {
+            let trimmed = name.trimmingCharacters(in: .whitespaces)
+            guard existing.contains(trimmed), !seen.contains(trimmed) else { continue }
+            seen.insert(trimmed)
+            ordered.append(trimmed)
+        }
+
+        for command in commands.sorted(by: { $0.sortIndex < $1.sortIndex }) {
+            let trimmed = command.group.trimmingCharacters(in: .whitespaces)
+            guard existing.contains(trimmed), !seen.contains(trimmed) else { continue }
+            seen.insert(trimmed)
+            ordered.append(trimmed)
+        }
+
+        return ordered
     }
 }
 

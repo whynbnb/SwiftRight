@@ -13,6 +13,7 @@ final class SRWindowManager: NSObject, NSWindowDelegate {
     private var managerWindow: NSWindow?
     private var outputWindow: NSWindow?
     private var settingsWindow: NSWindow?
+    private var sortWindow: NSWindow?
     private var aboutWindow: NSWindow?
 
     private override init() {
@@ -20,7 +21,7 @@ final class SRWindowManager: NSObject, NSWindowDelegate {
     }
 
     private var allWindows: [NSWindow] {
-        [managerWindow, outputWindow, settingsWindow, aboutWindow].compactMap { $0 }
+        [managerWindow, outputWindow, settingsWindow, sortWindow, aboutWindow].compactMap { $0 }
     }
 
     /// 还有窗口开着吗。「用完自动退出」要靠它判断能不能退。
@@ -107,6 +108,35 @@ final class SRWindowManager: NSObject, NSWindowDelegate {
         present(window)
     }
 
+    // MARK: - 排序
+
+    func showSort() {
+        if let sortWindow {
+            present(sortWindow)
+            return
+        }
+
+        // 排序窗口用标准标题栏：fullSizeContentView + 透明标题栏会让
+        // 后面的主窗口透出来，在顶部留下奇怪的竖线。
+        let window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 860, height: 600),
+            styleMask: [.titled, .closable, .miniaturizable, .resizable],
+            backing: .buffered,
+            defer: false
+        )
+        window.title = L("排序")
+        window.minSize = NSSize(width: 720, height: 460)
+        window.isReleasedWhenClosed = false
+        window.delegate = self
+        window.contentView = NSHostingView(rootView: SRLocalizedRoot {
+            SRSortView().environmentObject(SRAppModel.shared)
+        })
+        window.center()
+        window.setFrameAutosaveName("SwiftRightSortWindow")
+        sortWindow = window
+        present(window)
+    }
+
     // MARK: - 关于
 
     func showAbout() {
@@ -143,6 +173,7 @@ final class SRWindowManager: NSObject, NSWindowDelegate {
         managerWindow?.title = "SwiftRight"
         outputWindow?.title = L("运行输出")
         settingsWindow?.title = L("设置")
+        sortWindow?.title = L("排序")
         aboutWindow?.title = L("关于 SwiftRight")
     }
 
