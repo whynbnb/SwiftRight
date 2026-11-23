@@ -17,24 +17,57 @@ struct SRCommandEditorView: View {
     ]
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
+        // 详情列可能很宽（侧栏折叠后接近整个窗口），也可能很窄。
+        // 宽度够时排成两列：左边放基本信息和脚本，右边放运行相关的短表单，
+        // 表单字段不会被拉成一条长线；窄了就退回单列。
+        GeometryReader { proxy in
+            ScrollView {
+                Group {
+                    if proxy.size.width >= 900 {
+                        twoColumnForm
+                    } else {
+                        singleColumnForm
+                    }
+                }
+                .padding(20)
+                .frame(maxWidth: 1040, alignment: .leading)
+            }
+            // macOS 26 的 scroll edge effect 会在标题栏下方糊出一条矩形，
+            // 鼠标移进去才明显。这里内容本身就是卡片化的，不需要这层模糊。
+            .modifier(SRHideScrollEdgeEffect())
+        }
+        .frame(maxWidth: .infinity)
+        .onAppear(perform: syncLocalState)
+        .onChange(of: command.id) { syncLocalState() }
+        .onChange(of: extensionsText) { applyExtensions() }
+    }
+
+    // MARK: - 排布
+
+    private var twoColumnForm: some View {
+        HStack(alignment: .top, spacing: 18) {
+            VStack(alignment: .leading, spacing: 18) {
                 basicsSection
                 scriptSection
+            }
+            VStack(alignment: .leading, spacing: 18) {
                 behaviourSection
                 scopeSection
                 advancedSection
             }
-            .padding(20)
-            .frame(maxWidth: 720, alignment: .leading)
+            // 右列都是短表单，限宽避免输入框被拉得太长。
+            .frame(width: 380)
         }
-        .frame(maxWidth: .infinity)
-        // macOS 26 的 scroll edge effect 会在标题栏下方糊出一条矩形，
-        // 鼠标移进去才明显。这里内容本身就是卡片化的，不需要这层模糊。
-        .modifier(SRHideScrollEdgeEffect())
-        .onAppear(perform: syncLocalState)
-        .onChange(of: command.id) { syncLocalState() }
-        .onChange(of: extensionsText) { applyExtensions() }
+    }
+
+    private var singleColumnForm: some View {
+        VStack(alignment: .leading, spacing: 20) {
+            basicsSection
+            scriptSection
+            behaviourSection
+            scopeSection
+            advancedSection
+        }
     }
 
     // MARK: - 基本信息
@@ -74,18 +107,25 @@ struct SRCommandEditorView: View {
                         .menuStyle(.borderlessButton)
                         .fixedSize()
                     }
+                    // 规则说明收进悬浮提示，省掉一行常驻说明文字。
+                    Image(systemName: "info.circle")
+                        .foregroundStyle(.secondary)
+                        .help(L("同名分组的命令会被收进同一个二级子菜单。"))
                 }
             }
-            Text(L("同名分组的命令会被收进同一个二级子菜单。"))
-                .font(.caption)
-                .foregroundStyle(.secondary)
         }
     }
 
     // MARK: - 脚本
 
     private var scriptSection: some View {
-        SRSection(L("脚本")) {
+        // 占位符与 shebang 的说明收进标题旁的悬浮提示。
+        SRSection(L("脚本"),
+                  hint: L("选中的路径同时会作为 $1 $2 … 传给脚本，写 \"$@\" 与写 {paths} 等价。")
+                      + "\n"
+                      + L("占位符默认已做 shell 转义；需要原始文本时用 {path:raw} 这种写法。")
+                      + "\n"
+                      + L("脚本以 #! 开头时会按 shebang 执行，下面的解释器设置将被忽略。")) {
             SRScriptEditor(text: $command.script, pendingInsertion: $pendingInsertion)
                 .frame(minHeight: 180)
                 .clipShape(RoundedRectangle(cornerRadius: 6))
@@ -112,15 +152,6 @@ struct SRCommandEditorView: View {
                     }
                 }
             }
-
-            Text(L("选中的路径同时会作为 $1 $2 … 传给脚本，写 \"$@\" 与写 {paths} 等价。")
-                 + "\n"
-                 + L("占位符默认已做 shell 转义；需要原始文本时用 {path:raw} 这种写法。")
-                 + "\n"
-                 + L("脚本以 #! 开头时会按 shebang 执行，下面的解释器设置将被忽略。"))
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
 
             LabeledContent(L("解释器")) {
                 HStack(spacing: 6) {
@@ -338,17 +369,28 @@ private struct SRHideScrollEdgeEffect: ViewModifier {
 struct SRSection<Content: View>: View {
 
     private let title: String
+    private let hint: String?
     private let content: Content
 
-    init(_ title: String, @ViewBuilder content: () -> Content) {
+    init(_ title: String, hint: String? = nil, @ViewBuilder content: () -> Content) {
         self.title = title
+        self.hint = hint
         self.content = content()
     }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text(title)
-                .font(.headline)
+            HStack(spacing: 6) {
+                Text(title)
+                    .font(.headline)
+                if let hint {
+                    // 常驻说明太长时收进标题旁的悬浮提示。
+                    Image(systemName: "info.circle")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .help(hint)
+                }
+            }
             VStack(alignment: .leading, spacing: 10) {
                 content
             }
