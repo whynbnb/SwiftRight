@@ -18,7 +18,7 @@ macOS 访达（Finder）右键菜单扩展。在图形界面里定义任意 shel
 
 ### 用发布版
 
-从 [Releases](https://github.com/WHYBBE/SwiftRight/releases) 下载 `SwiftRight-<版本>.dmg`（或 `.zip`），把 **SwiftRight.app** 拖进**应用程序**，然后：
+从 [Releases](https://github.com/whynbnb/SwiftRight/releases) 下载 `SwiftRight-<版本>.dmg`（或 `.zip`），把 **SwiftRight.app** 拖进**应用程序**，然后：
 
 ```bash
 xattr -dr com.apple.quarantine /Applications/SwiftRight.app

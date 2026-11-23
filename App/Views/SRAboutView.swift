@@ -16,9 +16,9 @@ struct SRAboutView: View {
         Bundle.main.bundleIdentifier ?? "—"
     }
 
-    private let repositorySlug = "WHYBBE/SwiftRight"
-    private let repositoryURL = URL(string: "https://github.com/WHYBBE/SwiftRight")!
-    private let licenseURL = URL(string: "https://github.com/WHYBBE/SwiftRight/blob/main/LICENSE")!
+    private let repositorySlug = "whynbnb/SwiftRight"
+    private let repositoryURL = URL(string: "https://github.com/whynbnb/SwiftRight")!
+    private let licenseURL = URL(string: "https://github.com/whynbnb/SwiftRight/blob/main/LICENSE")!
 
     var body: some View {
         VStack(spacing: 0) {

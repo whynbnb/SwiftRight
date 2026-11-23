@@ -18,7 +18,7 @@ Built with Swift / SwiftUI / Xcode. No third-party dependencies.
 
 ### From a release build
 
-Download `SwiftRight-<version>.dmg` (or `.zip`) from [Releases](https://github.com/WHYBBE/SwiftRight/releases), drag **SwiftRight.app** into **Applications**, then:
+Download `SwiftRight-<version>.dmg` (or `.zip`) from [Releases](https://github.com/whynbnb/SwiftRight/releases), drag **SwiftRight.app** into **Applications**, then:
 
 ```bash
 xattr -dr com.apple.quarantine /Applications/SwiftRight.app
