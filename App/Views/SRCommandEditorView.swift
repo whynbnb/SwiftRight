@@ -29,6 +29,9 @@ struct SRCommandEditorView: View {
             .frame(maxWidth: 720, alignment: .leading)
         }
         .frame(maxWidth: .infinity)
+        // macOS 26 的 scroll edge effect 会在标题栏下方糊出一条矩形，
+        // 鼠标移进去才明显。这里内容本身就是卡片化的，不需要这层模糊。
+        .modifier(SRHideScrollEdgeEffect())
         .onAppear(perform: syncLocalState)
         .onChange(of: command.id) { syncLocalState() }
         .onChange(of: extensionsText) { applyExtensions() }
@@ -313,6 +316,19 @@ struct SRCommandEditorView: View {
             .filter { !$0.isEmpty }
         if parsed != command.fileExtensions {
             command.fileExtensions = parsed
+        }
+    }
+}
+
+/// macOS 26 起 ScrollView 默认会在标题栏/安全区交界处加一层 scroll edge effect。
+/// 内容是放大版表单，这层模糊只会让顶部多出一条矩形，直接关掉。
+private struct SRHideScrollEdgeEffect: ViewModifier {
+    @ViewBuilder
+    func body(content: Content) -> some View {
+        if #available(macOS 26.0, *) {
+            content.scrollEdgeEffectHidden()
+        } else {
+            content
         }
     }
 }

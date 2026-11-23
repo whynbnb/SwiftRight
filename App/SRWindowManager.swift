@@ -160,6 +160,9 @@ final class SRWindowManager: NSObject, NSWindowDelegate {
             defer: false
         )
         window.title = title
+        // fullSizeContentView 下让标题栏透明，内容才能通体到顶；
+        // 不透明标题栏在折叠侧栏后会留一块和内容宽度不一致的矩形。
+        window.titlebarAppearsTransparent = true
         window.minSize = minSize
         window.isReleasedWhenClosed = false
         window.contentView = NSHostingView(rootView: content())

@@ -9,8 +9,10 @@ struct RootView: View {
     @ObservedObject private var editors = SREditorCatalog.shared
     @ObservedObject private var templates = SRTemplateStore.shared
 
+    @State private var columnVisibility: NavigationSplitViewVisibility = .automatic
+
     var body: some View {
-        NavigationSplitView {
+        NavigationSplitView(columnVisibility: $columnVisibility) {
             sidebar
                 .navigationSplitViewColumnWidth(min: 230, ideal: 260, max: 340)
         } detail: {
@@ -19,6 +21,19 @@ struct RootView: View {
         .frame(minWidth: 760, minHeight: 460)
         .toolbar { toolbarContent }
         .onAppear { model.refreshExtensionStatus() }
+        .onChange(of: columnVisibility) { forceRelayout() }
+    }
+
+    /// macOS 26 折叠侧栏后，详情列的背景层有时还停在展开时的宽度，
+    /// 鼠标移进去才刷新成一块矩形。主动让窗口重排 + 重绘一次。
+    private func forceRelayout() {
+        DispatchQueue.main.async {
+            for window in NSApp.windows where window.isVisible {
+                window.contentView?.needsLayout = true
+                window.contentView?.layoutSubtreeIfNeeded()
+                window.displayIfNeeded()
+            }
+        }
     }
 
     // MARK: - 侧边栏
@@ -62,20 +77,27 @@ struct RootView: View {
 
     @ViewBuilder
     private var detail: some View {
-        if let id = model.selection, let binding = model.binding(for: id) {
-            SRCommandEditorView(command: binding)
-                .environmentObject(model)
-                .id(id)
-        } else {
-            ContentUnavailableView {
-                Label(L("还没有命令"), systemImage: "bolt.circle")
-            } description: {
-                Text(L("点左上角的 + 新建一条，它会立刻出现在访达的右键菜单里。"))
-            } actions: {
-                Button(L("新建命令")) { model.addCommand() }
-                    .buttonStyle(.borderedProminent)
+        Group {
+            if let id = model.selection, let binding = model.binding(for: id) {
+                SRCommandEditorView(command: binding)
+                    .environmentObject(model)
+                    .id(id)
+            } else {
+                ContentUnavailableView {
+                    Label(L("还没有命令"), systemImage: "bolt.circle")
+                } description: {
+                    Text(L("点左上角的 + 新建一条，它会立刻出现在访达的右键菜单里。"))
+                } actions: {
+                    Button(L("新建命令")) { model.addCommand() }
+                        .buttonStyle(.borderedProminent)
+                }
             }
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        // 折叠侧栏后，详情列的背景层有时还停在展开时的宽度，鼠标移进去
+        // 才刷新成一块矩形。这里给详情列铺一层不随安全区收缩的背景，
+        // 让它始终跟着列宽走。
+        .background(Color(nsColor: .windowBackgroundColor).ignoresSafeArea())
     }
 
     // MARK: - 工具栏
