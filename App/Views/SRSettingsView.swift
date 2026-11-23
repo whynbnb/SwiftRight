@@ -13,7 +13,7 @@ struct SRSettingsView: View {
 
     /// 分页标识。用 enum 而不是 TabView 的隐式顺序，加减页不容易错位。
     private enum Tab: String, CaseIterable, Identifiable {
-        case general, menu, terminal, editor, template, config, extensionStatus
+        case general, extensionStatus, config, menu, terminal, editor, template
 
         var id: String { rawValue }
 
