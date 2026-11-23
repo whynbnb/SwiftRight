@@ -230,3 +230,25 @@ final class SRWindowManager: NSObject, NSWindowDelegate {
         }
     }
 }
+
+// MARK: - 破坏性操作确认
+
+/// 删除这类不可撤销的操作统一走原生确认框，避免误触。
+enum SRConfirm {
+
+    /// 返回 true 表示用户点了确认。
+    @discardableResult
+    static func confirmDestructive(message: String,
+                                   informative: String,
+                                   confirmTitle: String) -> Bool {
+        let alert = NSAlert()
+        alert.alertStyle = .warning
+        alert.messageText = message
+        alert.informativeText = informative
+        alert.addButton(withTitle: confirmTitle)
+        alert.addButton(withTitle: L("取消"))
+        // 确认按钮按系统规范渲染成红色，和菜单里的删除操作保持一致。
+        alert.buttons.first?.hasDestructiveAction = true
+        return alert.runModal() == .alertFirstButtonReturn
+    }
+}

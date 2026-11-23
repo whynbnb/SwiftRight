@@ -111,7 +111,7 @@ struct RootView: View {
                               case .command(let id) = sidebarRows[index] else { return nil }
                         return id
                     }
-                    for id in ids { model.delete(id) }
+                    confirmAndDelete(ids)
                 }
             }
             .listStyle(.sidebar)
@@ -123,8 +123,8 @@ struct RootView: View {
                         }
                         Divider()
                     }
-                    Button(L("复制一份")) { model.duplicate(id) }
-                    Button(L("删除"), role: .destructive) { model.delete(id) }
+                    Button(L("复制")) { model.duplicate(id) }
+                    Button(L("删除"), role: .destructive) { confirmAndDelete([id]) }
                 }
             }
 
@@ -188,7 +188,7 @@ struct RootView: View {
         }
 
         ToolbarItemGroup {
-            // 低频操作收进右侧的「更多」：删除和运行输出。
+            // 低频操作收进右侧的「更多」：排序、运行输出、复制和删除。
             // 设置不放在工具栏 —— 菜单栏和 ⌘, 都已经有入口了。
             Menu {
                 Button {
@@ -205,8 +205,15 @@ struct RootView: View {
 
                 Divider()
 
+                Button {
+                    if let id = model.selection { model.duplicate(id) }
+                } label: {
+                    Label(L("复制"), systemImage: "plus.square.on.square")
+                }
+                .disabled(model.selection == nil)
+
                 Button(role: .destructive) {
-                    if let id = model.selection { model.delete(id) }
+                    if let id = model.selection { confirmAndDelete([id]) }
                 } label: {
                     Label(L("删除"), systemImage: "trash")
                 }
@@ -216,6 +223,26 @@ struct RootView: View {
             }
             .help(L("更多"))
         }
+    }
+
+    // MARK: - 删除确认
+
+    /// 侧栏滑动删除、右键菜单和工具栏菜单共用。
+    private func confirmAndDelete(_ ids: [UUID]) {
+        guard !ids.isEmpty else { return }
+        let message: String
+        if ids.count == 1 {
+            let title = model.commands.first(where: { $0.id == ids[0] })?.title ?? ""
+            message = L("删除「%@」？", title.isEmpty ? L("未命名命令") : title)
+        } else {
+            message = L("删除这 %@ 条命令？", String(ids.count))
+        }
+        guard SRConfirm.confirmDestructive(
+            message: message,
+            informative: L("删除后不会再出现在右键菜单里，也无法撤销。"),
+            confirmTitle: L("删除")
+        ) else { return }
+        for id in ids { model.delete(id) }
     }
 
     // MARK: - 生成器子菜单

@@ -297,20 +297,6 @@ struct SRCommandEditorView: View {
                 }
                 .buttonStyle(.borderedProminent)
                 .help(L("挑几个文件当作选中项，立刻跑一次并显示输出"))
-
-                Button {
-                    model.duplicate(command.id)
-                } label: {
-                    Label(L("复制一份"), systemImage: "plus.square.on.square")
-                }
-
-                Spacer()
-
-                Button(role: .destructive) {
-                    model.delete(command.id)
-                } label: {
-                    Label(L("删除"), systemImage: "trash")
-                }
             }
             .padding(.top, 2)
         }

@@ -103,10 +103,10 @@ struct SRTemplateTab: View {
                     TextField(L("模板名称"), text: binding(\.name))
                         .textFieldStyle(.roundedBorder)
                     Button {
-                        store.remove(template.id)
-                        selection = store.templates.first?.id
+                        confirmDelete(template)
                     } label: {
                         Image(systemName: "trash")
+                            .foregroundStyle(.red)
                     }
                     .buttonStyle(.borderless)
                     .help(L("删除这个模板"))
@@ -183,6 +183,16 @@ struct SRTemplateTab: View {
               NSImage(systemSymbolName: template.symbol, accessibilityDescription: nil) != nil
         else { return "doc" }
         return template.symbol
+    }
+
+    private func confirmDelete(_ template: SRFileTemplate) {
+        guard SRConfirm.confirmDestructive(
+            message: L("删除模板「%@」？", template.name),
+            informative: L("删除后无法恢复。已生成的命令不会受影响。"),
+            confirmTitle: L("删除")
+        ) else { return }
+        store.remove(template.id)
+        selection = store.templates.first?.id
     }
 
     private func previewName(_ template: SRFileTemplate, suffix: String) -> String {

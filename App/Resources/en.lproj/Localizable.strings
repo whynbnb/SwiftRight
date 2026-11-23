@@ -7,7 +7,6 @@
 "执行" = "Run";
 "取消" = "Cancel";
 "删除" = "Delete";
-"复制一份" = "Duplicate";
 "新建" = "New";
 "清空" = "Clear";
 "停止" = "Stop";
@@ -334,3 +333,10 @@
 "分组名称" = "Group name";
 "还没有终端。点上面的「扫描本机终端」，或手动添加。" = "No terminals yet. Use Scan Terminals above, or add one manually.";
 "还没有编辑器。点上面的「扫描本机编辑器」，或手动添加。" = "No editors yet. Use Scan Editors above, or add one manually.";
+"复制" = "Duplicate";
+"删除「%@」？" = "Delete “%@”?";
+"删除这 %@ 条命令？" = "Delete these %@ commands?";
+"未命名命令" = "Untitled command";
+"删除后不会再出现在右键菜单里，也无法撤销。" = "It will be removed from the context menu and can’t be restored.";
+"删除模板「%@」？" = "Delete template “%@”?";
+"删除后无法恢复。已生成的命令不会受影响。" = "This can’t be undone. Commands already created from it are not affected.";
