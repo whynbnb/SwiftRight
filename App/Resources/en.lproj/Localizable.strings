@@ -340,3 +340,5 @@
 "删除后不会再出现在右键菜单里，也无法撤销。" = "It will be removed from the context menu and can’t be restored.";
 "删除模板「%@」？" = "Delete template “%@”?";
 "删除后无法恢复。已生成的命令不会受影响。" = "This can’t be undone. Commands already created from it are not affected.";
+"先把上面的「允许多选」打开。" = "Turn on “Allow Multiple Selection” above first.";
+"%@ 分钟" = "%@ min";

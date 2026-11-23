@@ -18,8 +18,8 @@ struct SRCommandEditorView: View {
 
     var body: some View {
         // 详情列可能很宽（侧栏折叠后接近整个窗口），也可能很窄。
-        // 宽度够时排成两列：左边放基本信息和脚本，右边放运行相关的短表单，
-        // 表单字段不会被拉成一条长线；窄了就退回单列。
+        // 宽度够时排成两列：左边基本信息和高级，右边运行设置；脚本单独
+        // 占满一整行放在下面。窄了就按「基本 → 高级 → 运行 → 脚本」单列排。
         GeometryReader { proxy in
             ScrollView {
                 Group {
@@ -45,28 +45,29 @@ struct SRCommandEditorView: View {
     // MARK: - 排布
 
     private var twoColumnForm: some View {
-        HStack(alignment: .top, spacing: 18) {
-            VStack(alignment: .leading, spacing: 18) {
-                basicsSection
-                scriptSection
+        VStack(alignment: .leading, spacing: 18) {
+            HStack(alignment: .top, spacing: 18) {
+                VStack(alignment: .leading, spacing: 18) {
+                    basicsSection
+                    advancedSection
+                }
+                VStack(alignment: .leading, spacing: 18) {
+                    runSection
+                }
+                // 右列都是短表单，限宽避免输入框被拉得太长。
+                .frame(width: 380)
             }
-            VStack(alignment: .leading, spacing: 18) {
-                behaviourSection
-                scopeSection
-                advancedSection
-            }
-            // 右列都是短表单，限宽避免输入框被拉得太长。
-            .frame(width: 380)
+            // 脚本编辑器需要横向空间，单独占一整行放在下面。
+            scriptSection
         }
     }
 
     private var singleColumnForm: some View {
         VStack(alignment: .leading, spacing: 20) {
             basicsSection
-            scriptSection
-            behaviourSection
-            scopeSection
             advancedSection
+            runSection
+            scriptSection
         }
     }
 
@@ -169,6 +170,19 @@ struct SRCommandEditorView: View {
                     }
                 }
             }
+
+            // 试运行的入口跟着脚本走，放在脚本区最下面。
+            HStack(spacing: 10) {
+                Button {
+                    testRun()
+                } label: {
+                    Label(L("试运行…"), systemImage: "play.fill")
+                }
+                .buttonStyle(.borderedProminent)
+                .help(L("挑几个文件当作选中项，立刻跑一次并显示输出"))
+                Spacer(minLength: 0)
+            }
+            .padding(.top, 2)
         }
     }
 
@@ -186,36 +200,47 @@ struct SRCommandEditorView: View {
         )
     }
 
-    // MARK: - 运行行为
+    // MARK: - 运行设置
 
-    private var behaviourSection: some View {
-        SRSection(L("运行方式")) {
-            Picker(L("完成后"), selection: $command.runMode) {
-                ForEach(SRRunMode.allCases) { Text($0.displayName).tag($0) }
+    /// 运行方式和适用范围的字段合并成一张卡片，只用「运行设置」一个标题，
+    /// 两组之间用细分割线隔开。
+    private var runSection: some View {
+        SRSection(L("运行设置")) {
+            behaviourFields
+            Divider()
+            scopeFields
+        }
+    }
+
+    @ViewBuilder
+    private var behaviourFields: some View {
+        Picker(L("完成后"), selection: $command.runMode) {
+            ForEach(SRRunMode.allCases) { Text($0.displayName).tag($0) }
+        }
+        .fixedSize()
+
+        if command.runMode == .terminal {
+            terminalPicker
+        }
+
+        Picker(L("工作目录"), selection: $command.workingDirectory) {
+            ForEach(SRWorkingDirectory.allCases) { Text($0.displayName).tag($0) }
+        }
+        .fixedSize()
+
+        if command.workingDirectory == .custom {
+            LabeledContent(L("路径")) {
+                TextField(L("支持占位符，例如 {home}/Desktop"),
+                          text: $command.customWorkingDirectory)
+                    .textFieldStyle(.roundedBorder)
             }
-            .pickerStyle(.radioGroup)
+        }
 
-            if command.runMode == .terminal {
-                terminalPicker
-            }
-
-            Picker(L("工作目录"), selection: $command.workingDirectory) {
-                ForEach(SRWorkingDirectory.allCases) { Text($0.displayName).tag($0) }
-            }
-            .fixedSize()
-
-            if command.workingDirectory == .custom {
-                LabeledContent(L("路径")) {
-                    TextField(L("支持占位符，例如 {home}/Desktop"),
-                              text: $command.customWorkingDirectory)
-                        .textFieldStyle(.roundedBorder)
-                }
-            }
-
-            Toggle(L("每个选中项各跑一次"), isOn: $command.runOncePerItem)
-                .help(L("关掉的话，所有选中路径会一次性传给同一个进程。"))
+        HStack(spacing: 16) {
+            // 两项没有依赖关系，只是都影响执行过程，并排省一行高度。
             Toggle(L("执行前弹窗确认"), isOn: $command.confirmBeforeRun)
             Toggle(L("完成后发送通知"), isOn: $command.notifyOnFinish)
+            Spacer(minLength: 0)
         }
     }
 
@@ -259,46 +284,74 @@ struct SRCommandEditorView: View {
         return "（\(name)）"
     }
 
-    private var scopeSection: some View {
-        SRSection(L("适用范围")) {
-            Picker(L("适用于"), selection: $command.appliesTo) {
-                ForEach(SRSelectionKind.allCases) { Text($0.displayName).tag($0) }
-            }
-            .fixedSize()
+    @ViewBuilder
+    private var scopeFields: some View {
+        Picker(L("适用于"), selection: $command.appliesTo) {
+            ForEach(SRSelectionKind.allCases) { Text($0.displayName).tag($0) }
+        }
+        .fixedSize()
 
-            LabeledContent(L("扩展名")) {
-                TextField(L("留空表示不限，多个用逗号分隔，如 jpg, png"), text: $extensionsText)
-                    .textFieldStyle(.roundedBorder)
-            }
+        LabeledContent(L("扩展名")) {
+            TextField(L("留空表示不限，多个用逗号分隔，如 jpg, png"), text: $extensionsText)
+                .textFieldStyle(.roundedBorder)
+        }
 
+        HStack(spacing: 16) {
             Toggle(L("允许多选"), isOn: $command.allowsMultipleSelection)
                 .help(L("关掉之后，选中多个文件时这条命令不会出现在菜单里。"))
+
+            // 只有允许多选时这条才有意义，放在多选开关后面并跟着禁用。
+            Toggle(L("每个选中项各跑一次"), isOn: $command.runOncePerItem)
+                .help(command.allowsMultipleSelection
+                      ? L("关掉的话，所有选中路径会一次性传给同一个进程。")
+                      : L("先把上面的「允许多选」打开。"))
+                .disabled(!command.allowsMultipleSelection)
+
+            Spacer(minLength: 0)
         }
+    }
+
+    @ViewBuilder
+    private var timeoutField: some View {
+        // 常用档位直接摆一行，指向同一个值；右侧的后进器留给自定义秒数。
+        LabeledContent(L("超时")) {
+            HStack(spacing: 6) {
+                ForEach(Self.timeoutPresets, id: \.self) { seconds in
+                    if command.timeoutSeconds == seconds {
+                        Button(timeoutLabel(seconds)) { command.timeoutSeconds = seconds }
+                            .buttonStyle(.borderedProminent)
+                            .controlSize(.small)
+                    } else {
+                        Button(timeoutLabel(seconds)) { command.timeoutSeconds = seconds }
+                            .buttonStyle(.bordered)
+                            .controlSize(.small)
+                    }
+                }
+
+                Spacer(minLength: 6)
+
+                Stepper(value: $command.timeoutSeconds, in: 0...3600, step: 10) {
+                    Text(timeoutLabel(command.timeoutSeconds))
+                        .monospacedDigit()
+                }
+                .fixedSize()
+            }
+        }
+    }
+
+    private static let timeoutPresets = [0, 15, 30, 45, 60]
+
+    private func timeoutLabel(_ seconds: Int) -> String {
+        if seconds == 0 { return L("不限制") }
+        if seconds % 60 == 0 { return L("%@ 分钟", String(seconds / 60)) }
+        return L("%@ 秒", String(seconds))
     }
 
     // MARK: - 高级
 
     private var advancedSection: some View {
         SRSection(L("高级")) {
-            LabeledContent(L("超时")) {
-                Stepper(value: $command.timeoutSeconds, in: 0...3600, step: 10) {
-                    Text(command.timeoutSeconds == 0
-                         ? L("不限制")
-                         : L("%@ 秒", String(command.timeoutSeconds)))
-                }
-                .fixedSize()
-            }
-
-            HStack(spacing: 10) {
-                Button {
-                    testRun()
-                } label: {
-                    Label(L("试运行…"), systemImage: "play.fill")
-                }
-                .buttonStyle(.borderedProminent)
-                .help(L("挑几个文件当作选中项，立刻跑一次并显示输出"))
-            }
-            .padding(.top, 2)
+            timeoutField
         }
     }
 
@@ -365,7 +418,8 @@ struct SRSection<Content: View>: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        // 标题和卡片之间收得紧一点，表单整体更紧凑。
+        VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 6) {
                 Text(title)
                     .font(.headline)
