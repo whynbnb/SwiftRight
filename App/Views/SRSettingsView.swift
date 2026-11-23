@@ -68,11 +68,18 @@ struct SRSettingsView: View {
             .listStyle(.sidebar)
             .frame(width: 172)
 
-            Divider()
-
             content
                 .padding(20)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                // 分隔线改用内容列背景上的一条 1pt 竖线：HStack 里的 Divider
+                // 会被顶部安全区截断，fullSizeContentView 下左上角看起来像
+                // 缺了一截。ignoresSafeArea 让线一直顶到窗口上沿。
+                .background(alignment: .leading) {
+                    Rectangle()
+                        .fill(Color(nsColor: .separatorColor))
+                        .frame(width: 1)
+                        .ignoresSafeArea(edges: .top)
+                }
         }
         // 尺寸交给窗口定，这里只管填满。
         .frame(maxWidth: .infinity, maxHeight: .infinity)
