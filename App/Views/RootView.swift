@@ -98,32 +98,30 @@ struct RootView: View {
                 model.addCommand()
             }
             .help(L("新建命令"))
-
-            Button {
-                if let id = model.selection { model.delete(id) }
-            } label: {
-                Label(L("删除"), systemImage: "minus")
-            }
-            .disabled(model.selection == nil)
-            .help(L("删除选中的命令"))
         }
 
         ToolbarItemGroup {
-            Button {
-                SRWindowManager.shared.showOutput()
-            } label: {
-                Label(L("运行输出"), systemImage: "text.alignleft")
-            }
-            .help(L("查看运行输出"))
+            // 低频操作收进右侧的「更多」：删除和运行输出。
+            // 设置不放在工具栏 —— 菜单栏和 ⌘, 都已经有入口了。
+            Menu {
+                Button {
+                    SRWindowManager.shared.showOutput()
+                } label: {
+                    Label(L("运行输出"), systemImage: "text.alignleft")
+                }
 
-            // 导入导出、菜单外观、语言主题现在统一在设置窗口里，
-            // 工具栏不再各开一个入口。
-            Button {
-                SRWindowManager.shared.showSettings()
+                Divider()
+
+                Button(role: .destructive) {
+                    if let id = model.selection { model.delete(id) }
+                } label: {
+                    Label(L("删除"), systemImage: "trash")
+                }
+                .disabled(model.selection == nil)
             } label: {
-                Label(L("设置"), systemImage: "gearshape")
+                Label(L("更多"), systemImage: "ellipsis.circle")
             }
-            .help(L("设置"))
+            .help(L("更多"))
         }
     }
 
