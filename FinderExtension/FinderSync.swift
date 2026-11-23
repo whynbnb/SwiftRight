@@ -154,34 +154,54 @@ final class FinderSync: FIFinderSync {
         return item
     }
 
-    /// 图标画布的逻辑尺寸。所有菜单项统一用这个尺寸，
-    /// 菜单里的文字才会对齐在同一列上。
-    private static let iconBox = NSSize(width: 20, height: 16)
-    /// 符号本身的目标高度，比画布矮一点留出呼吸空间。
-    private static let iconGlyphHeight: CGFloat = 15
+    /// 图标画布的逻辑尺寸。访达的菜单图标槽是 16×16pt，画布必须和它一致：
+    /// 交给访达的图会被整体缩放进这个槽，20×16 的画布会被横向压扁到 16 宽，
+    /// 图标看起来就又小又扁。
+    private static let iconBox = NSSize(width: 16, height: 16)
+    /// 符号本身的目标高度。等于画布高度，铺满图标槽。
+    private static let iconGlyphHeight: CGFloat = 16
     private static let iconPointSize: CGFloat = 14
 
     /// 渲染好的图标缓存。`menu(for:)` 每次右键都会跑一遍，
     /// 十几个菜单项每次都重新画位图是白费。
+    ///
+    /// 键里带上明暗外观：颜色是直接烘进像素的（见下），
+    /// 系统切换深浅色之后必须重新画一份。
     private var iconCache: [String: NSImage] = [:]
+
+    /// 当前是不是深色外观。
+    ///
+    /// 扩展进程的 `effectiveAppearance` 不一定跟随访达（有可能一直停在 aqua），
+    /// 所以再读一遍全局的 `AppleInterfaceStyle` 兜底。
+    private static func prefersDarkAppearance() -> Bool {
+        if let appearance = NSApp?.effectiveAppearance,
+           appearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua {
+            return true
+        }
+        return UserDefaults.standard
+            .string(forKey: "AppleInterfaceStyle")?
+            .caseInsensitiveCompare("Dark") == .orderedSame
+    }
 
     /// 把 SF Symbol 渲染成菜单图标。
     ///
-    /// 直接把 symbol image 交给 NSMenuItem 会又糊又不齐，原因有两个：
+    /// 有两个访达特有的坑：
     ///
-    /// 其一，符号的原始尺寸各不相同（doc.plaintext 是 15×17，
-    /// chevron.left.forwardslash.chevron.right 是 23×16，internaldrive 是 20×14），
-    /// 塞进访达的图标槽全是 ×0.94、×1.14 这种非整数倍缩放，边缘必然发虚；
-    /// 而且这个菜单要跨 XPC 代理给访达，NSSymbolImageRep 是私有类型，
-    /// 归档过去还剩多少矢量信息并不可控。
+    /// 其一，**Finder Sync 不认 `isTemplate`**。菜单项图片跨进程交给访达后
+    /// 会按原样绘制，不会像普通 App 的菜单那样自动染成黑/白。所以颜色必须
+    /// 自己按当前外观烘进像素，并显式设 `isTemplate = false`。
     ///
-    /// 其二，尺寸不齐会让菜单项看起来大小不一。
+    /// 其二，符号的原始尺寸各不相同，访达会把整张图缩放进 16×16 的图标槽。
+    /// 画布不是 16×16 就会被非等比缩放。这里固定 16×16 画布，符号按比例
+    /// 缩放、居中，绝不拉伸 —— 非正方形符号（`textformat.abc`、`</>`）
+    /// 塞满方框会明显变形。
     ///
-    /// 所以这里自己按 2x 画成位图交出去 —— 位图跨进程无损 —— 并且
-    /// **按高度归一而不是塞进方框**：SF Symbols 的设计就是同一 pointSize 下
-    /// 视觉高度一致、宽度随字形变化，按框等比缩会把 `</>` 这类宽符号压得明显偏小。
+    /// 另外按 2x 出位图：位图跨 XPC 无损，Retina 上一个逻辑点对应两个
+    /// 物理像素，访达那边不需要二次缩放，边缘不发虚。
     private func symbolImage(_ name: String) -> NSImage? {
-        if let cached = iconCache[name] { return cached }
+        let isDark = Self.prefersDarkAppearance()
+        let cacheKey = "\(name)|\(isDark ? "dark" : "light")"
+        if let cached = iconCache[cacheKey] { return cached }
 
         guard let symbol = NSImage(systemSymbolName: name, accessibilityDescription: nil) else {
             return nil
@@ -194,8 +214,7 @@ final class FinderSync: FIFinderSync {
         guard natural.width > 0, natural.height > 0 else { return nil }
 
         let box = Self.iconBox
-        // 先按高度归一；个别特别宽的符号（如 23×16 的 `</>`）会超出画布宽度，
-        // 那就退回按宽度收一下，绝不拉伸。
+        // 等比缩放到 16×16 里：先按高度归一，特别宽的符号再由画布宽度兜底。
         let ratio = min(Self.iconGlyphHeight / natural.height, box.width / natural.width)
         let drawn = NSSize(width: natural.width * ratio, height: natural.height * ratio)
         let origin = NSPoint(x: ((box.width - drawn.width) / 2).rounded(),
@@ -225,14 +244,18 @@ final class FinderSync: FIFinderSync {
                         from: .zero,
                         operation: .sourceOver,
                         fraction: 1)
+        // SF Symbol 自带内部颜色，直接改填充色没用。用 sourceIn 只保留
+        // 符号的 alpha，把目标颜色填进去，相当于给已经画好的符号上色。
+        (isDark ? NSColor.white : NSColor.black).setFill()
+        NSRect(origin: .zero, size: box).fill(using: .sourceIn)
         NSGraphicsContext.restoreGraphicsState()
 
         let image = NSImage(size: box)
         image.addRepresentation(rep)
-        // 模板图：访达会按选中状态自己上色（未选中黑、选中白）。
-        image.isTemplate = true
+        // Finder Sync 不认模板图，颜色已经烘进像素，必须关掉。
+        image.isTemplate = false
 
-        iconCache[name] = image
+        iconCache[cacheKey] = image
         return image
     }
 
