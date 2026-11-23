@@ -283,6 +283,12 @@ final class SRAppModel: ObservableObject {
         commands[index].script = template.generatedScript()
     }
 
+    /// 切换启用状态。侧边栏不再放开关，右键菜单和详情页都走这里。
+    func toggleEnabled(_ id: UUID) {
+        guard let index = commands.firstIndex(where: { $0.id == id }) else { return }
+        commands[index].isEnabled.toggle()
+    }
+
     func delete(_ id: UUID) {
         guard let index = commands.firstIndex(where: { $0.id == id }) else { return }
         commands.remove(at: index)

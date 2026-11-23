@@ -41,6 +41,12 @@ struct RootView: View {
             .listStyle(.sidebar)
             .contextMenu(forSelectionType: UUID.self) { ids in
                 if let id = ids.first {
+                    if let command = model.commands.first(where: { $0.id == id }) {
+                        Button(command.isEnabled ? L("停用") : L("启用")) {
+                            model.toggleEnabled(id)
+                        }
+                        Divider()
+                    }
                     Button(L("复制一份")) { model.duplicate(id) }
                     Button(L("删除"), role: .destructive) { model.delete(id) }
                 }
@@ -216,22 +222,19 @@ private struct SRCommandRow: View {
 
             Spacer(minLength: 4)
 
-            Group {
-                if isSelected {
-                    Toggle("", isOn: $command.isEnabled)
-                        .toggleStyle(SRSelectedSwitchStyle())
-                } else {
-                    Toggle("", isOn: $command.isEnabled)
-                        .toggleStyle(.switch)
-                        .controlSize(.mini)
-                }
-            }
-            .labelsHidden()
-            // mini 开关连同预留的标签位是 54×24，这样选中前后右侧不会跳。
-            .frame(width: 54, height: 24, alignment: .trailing)
-            .help(command.isEnabled ? L("已启用") : L("已停用"))
+            statusDot
         }
         .padding(.vertical, 2)
+    }
+
+    /// 侧边栏只显示状态。开关会和蓝色高亮抢颜色，所以统一放到
+    /// 右键菜单和右侧详情页里操作。
+    private var statusDot: some View {
+        Circle()
+            .fill(command.isEnabled ? Color.green : Color.secondary.opacity(0.45))
+            .frame(width: 8, height: 8)
+            .help(command.isEnabled ? L("已启用") : L("已停用"))
+            .accessibilityLabel(command.isEnabled ? L("已启用") : L("已停用"))
     }
 
     // 选中行交给 SwiftUI 处理：`Color.primary` 在蓝底上会自动变成白，
@@ -261,36 +264,6 @@ private struct SRCommandRow: View {
               NSImage(systemSymbolName: command.symbol, accessibilityDescription: nil) != nil
         else { return "terminal" }
         return command.symbol
-    }
-}
-
-/// 选中行上的开关。
-///
-/// 原生开关的蓝色轨道和选中行的蓝底完全同色，开着也只剩一个白点，
-/// 看起来像状态丢了。选中时换成反色：白轨道 + 强调色滑块，不描边也能
-/// 从蓝底里分出来；灰底（列表失焦）时同样成立。
-///
-/// 尺寸照 mini 开关实测的 36×15，外层仍占 54×24，所以选中前后不会跳。
-private struct SRSelectedSwitchStyle: ToggleStyle {
-
-    func makeBody(configuration: Configuration) -> some View {
-        Button {
-            configuration.isOn.toggle()
-        } label: {
-            ZStack(alignment: configuration.isOn ? .trailing : .leading) {
-                Capsule()
-                    .fill(configuration.isOn
-                          ? Color.white
-                          : Color.primary.opacity(0.25))
-                Circle()
-                    .fill(configuration.isOn ? Color.accentColor : Color.white)
-                    .padding(1)
-                    .shadow(color: .black.opacity(0.15), radius: 0.5, y: 0.5)
-            }
-            .frame(width: 36, height: 15)
-            .animation(.easeInOut(duration: 0.15), value: configuration.isOn)
-        }
-        .buttonStyle(.plain)
     }
 }
 

@@ -38,6 +38,13 @@ struct SRCommandEditorView: View {
 
     private var basicsSection: some View {
         SRSection(L("基本信息")) {
+            // 侧边栏只显示状态点，启用/停用的操作放在这里和右键菜单里。
+            Toggle(L("启用（显示在右键菜单中）"), isOn: $command.isEnabled)
+                .toggleStyle(.switch)
+                .help(L("停用后不会出现在访达的右键菜单里。"))
+
+            Divider()
+
             LabeledContent(L("标题")) {
                 TextField(L("显示在右键菜单里的名字"), text: $command.title)
                     .textFieldStyle(.roundedBorder)
@@ -232,7 +239,6 @@ struct SRCommandEditorView: View {
 
             Toggle(L("允许多选"), isOn: $command.allowsMultipleSelection)
                 .help(L("关掉之后，选中多个文件时这条命令不会出现在菜单里。"))
-            Toggle(L("启用（显示在右键菜单中）"), isOn: $command.isEnabled)
         }
     }
 
