@@ -109,12 +109,14 @@ private struct SRGeneralTab: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
                 SRSection(L("外观")) {
+                    // 两个选项都铺满同一行宽度，左右边缘才会对齐：
+                    // 语言用分段控件（和主题一致），不再是一窄一宽。
                     Picker(L("语言"), selection: $preferences.language) {
                         ForEach(SRLanguage.allCases) { language in
                             Text(language.displayName).tag(language)
                         }
                     }
-                    .fixedSize()
+                    .pickerStyle(.segmented)
 
                     Picker(L("主题"), selection: $preferences.theme) {
                         ForEach(SRThemePreference.allCases) { theme in
