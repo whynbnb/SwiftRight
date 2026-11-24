@@ -52,6 +52,11 @@ struct SREditorTab: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
+
+            Text(L("只扫描 /Applications、/System/Applications 和 ~/Applications；装在别处请用「手动添加…」。"))
+                .font(.caption2)
+                .foregroundStyle(.tertiary)
+                .fixedSize(horizontal: false, vertical: true)
         }
     }
 

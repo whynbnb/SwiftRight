@@ -28,6 +28,16 @@ final class SRTerminalCatalog: ObservableObject {
         selectedID = defaults.string(forKey: Keys.selected) ?? ""
         terminals = loadStored()
 
+        // 旧版本会把开发目录 / 下载目录里注册过的副本也扫进来。
+        // 升级后先清一遍，手动添加的条目保留。
+        let outOfPlace = terminals.filter {
+            $0.isManual != true && !SRBundleInspector.isInStandardLocation($0.url)
+        }
+        if !outOfPlace.isEmpty {
+            terminals.removeAll { terminal in outOfPlace.contains { $0.id == terminal.id } }
+            persist()
+        }
+
         // 头一次运行先自动扫一遍，不然「在终端中运行」的列表是空的。
         if terminals.isEmpty {
             _ = scan()
@@ -54,9 +64,12 @@ final class SRTerminalCatalog: ObservableObject {
 
     /// 两路并行地找终端：
     ///
-    /// 1. 拿内置配方里的 bundle ID 逐个问 LaunchServices —— 装在哪都能找到，
-    ///    包括 /System/Applications/Utilities 这种不在 /Applications 的；
+    /// 1. 拿内置配方里的 bundle ID 逐个问 LaunchServices；
     /// 2. 反查"谁能打开 shell 脚本" —— 用来捞内置清单里没有的终端。
+    ///
+    /// 两路都只保留标准应用目录里的副本（/Applications、/System/Applications、
+    /// ~/Applications），开发目录或下载目录里注册过的副本不算 —— 那些多半是
+    /// 解压出来还没装、或者早就删了的残留。
     ///
     /// 已在列表里的只更新路径（应用可能被挪过位置），不覆盖用户改过的参数模板。
     @discardableResult
@@ -67,14 +80,14 @@ final class SRTerminalCatalog: ObservableObject {
         let workspace = NSWorkspace.shared
 
         for recipe in SRTerminal.recipes {
-            guard let url = workspace.urlForApplication(withBundleIdentifier: recipe.id) else {
-                continue
-            }
+            let copies = workspace.urlsForApplications(withBundleIdentifier: recipe.id)
+            guard let url = SRBundleInspector.standardCopy(of: copies) else { continue }
             found[recipe.id] = (recipe.name, url.path)
         }
 
         for url in shellScriptHandlers() {
-            guard let bundle = Bundle(url: url),
+            guard SRBundleInspector.isInStandardLocation(url),
+                  let bundle = Bundle(url: url),
                   let id = bundle.bundleIdentifier,
                   found[id] == nil
             else { continue }
@@ -97,11 +110,18 @@ final class SRTerminalCatalog: ObservableObject {
             }
         }
 
-        // 已经被删掉的应用没必要继续留在列表里。
-        let stale = terminals.filter { !$0.exists }
+        // 已经删掉的应用没必要继续留着；以前扫描留下的、位于非标准目录的
+        // 自动条目也一并清掉（手动添加的保留）。
+        let stale = terminals.filter { terminal in
+            !terminal.exists
+                || (terminal.isManual != true
+                    && !SRBundleInspector.isInStandardLocation(terminal.url))
+        }
         if !stale.isEmpty {
             result.removed = stale.map(\.name)
-            terminals.removeAll { !$0.exists }
+            terminals.removeAll { terminal in
+                stale.contains { $0.id == terminal.id }
+            }
         }
 
         sortAndPersist()
@@ -155,7 +175,8 @@ final class SRTerminalCatalog: ObservableObject {
 
         let name = (bundle.infoDictionary?["CFBundleName"] as? String)
             ?? url.deletingPathExtension().lastPathComponent
-        let terminal = SRTerminal.make(bundleID: id, name: name, path: url.path)
+        var terminal = SRTerminal.make(bundleID: id, name: name, path: url.path)
+        terminal.isManual = true
         terminals.append(terminal)
         sortAndPersist()
         return terminal

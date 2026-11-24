@@ -342,3 +342,4 @@
 "删除后无法恢复。已生成的命令不会受影响。" = "This can’t be undone. Commands already created from it are not affected.";
 "先把上面的「允许多选」打开。" = "Turn on “Allow Multiple Selection” above first.";
 "%@ 分钟" = "%@ min";
+"只扫描 /Applications、/System/Applications 和 ~/Applications；装在别处请用「手动添加…」。" = "Only /Applications, /System/Applications and ~/Applications are scanned. Use “Add Manually…” for apps installed elsewhere.";

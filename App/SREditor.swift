@@ -32,6 +32,33 @@ enum SRBundleInspector {
             ?? url.deletingPathExtension().lastPathComponent
     }
 
+    // MARK: - 扫描范围
+
+    /// 自动扫描只认这几个标准安装目录（含子目录）：
+    /// `/Applications`、`/System/Applications`、`~/Applications`。
+    ///
+    /// 别的地方（开发目录、下载目录、外置盘）里注册过的副本不算，
+    /// 否则 LaunchServices 一查就会把一堆"还记得的"安装包带出来。
+    /// 用户确实装在别处时，可以走「手动添加…」。
+    static var standardApplicationRoots: [String] {
+        var roots = ["/Applications", "/System/Applications"]
+        roots.append(FileManager.default.homeDirectoryForCurrentUser
+            .appendingPathComponent("Applications").path)
+        return roots
+    }
+
+    static func isInStandardLocation(_ url: URL) -> Bool {
+        let path = url.standardizedFileURL.path
+        return standardApplicationRoots.contains { root in
+            path.hasPrefix(root.hasSuffix("/") ? root : root + "/")
+        }
+    }
+
+    /// LaunchServices 可能给出同一个 bundle ID 的多份副本，挑标准位置的那份。
+    static func standardCopy(of urls: [URL]) -> URL? {
+        urls.first(where: isInStandardLocation)
+    }
+
     static func version(at url: URL) -> String? {
         let plist = url.appendingPathComponent("Contents/Info.plist")
         guard let info = NSDictionary(contentsOf: plist) else { return nil }
@@ -60,6 +87,8 @@ struct SREditor: Codable, Identifiable, Hashable {
     /// 可选的额外参数。留空就是最朴素的"把路径交给这个 app 打开"。
     var argumentTemplate: String
     var isBuiltin: Bool
+    /// 由「手动添加…」加进来的条目，重新扫描时不会被标准目录规则清掉。
+    var isManual: Bool?
 
     var url: URL { URL(fileURLWithPath: path) }
     var exists: Bool { FileManager.default.fileExists(atPath: path) }

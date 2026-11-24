@@ -24,6 +24,16 @@ final class SREditorCatalog: ObservableObject {
 
     private init() {
         editors = loadStored()
+
+        // 旧版本会扫到标准应用目录之外的副本，升级后先清掉。
+        let outOfPlace = editors.filter {
+            $0.isManual != true && !SRBundleInspector.isInStandardLocation($0.url)
+        }
+        if !outOfPlace.isEmpty {
+            editors.removeAll { editor in outOfPlace.contains { $0.id == editor.id } }
+            persist()
+        }
+
         if editors.isEmpty { _ = scan() }
     }
 
@@ -41,6 +51,9 @@ final class SREditorCatalog: ObservableObject {
     /// 2. 反查"谁把文件夹声明成可编辑的文档" —— 用来发现清单外的编辑器
     ///    （Cursor、Windsurf 这类新工具，以及我写死的 ID 过期时兜底）。
     ///
+    /// 两路都只保留标准应用目录（/Applications、/System/Applications、
+    /// ~/Applications）里的副本；装在其他位置的可以通过「手动添加…」补进来。
+    ///
     /// 第 2 路必须要求角色是 Editor 而不是 Viewer：CotEditor 和 Typora
     /// 把文件夹声明成 Viewer，那只是"能浏览"，不是"能当工程打开"。
     @discardableResult
@@ -49,13 +62,14 @@ final class SREditorCatalog: ObservableObject {
         var found: [String: (name: String, path: String, folders: Bool?)] = [:]
 
         for recipe in SREditor.recipes {
-            guard let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: recipe.id)
-            else { continue }
+            let copies = NSWorkspace.shared.urlsForApplications(withBundleIdentifier: recipe.id)
+            guard let url = SRBundleInspector.standardCopy(of: copies) else { continue }
             found[recipe.id] = (recipe.name, url.path, recipe.folders)
         }
 
         for url in folderEditors() {
-            guard let bundle = Bundle(url: url),
+            guard SRBundleInspector.isInStandardLocation(url),
+                  let bundle = Bundle(url: url),
                   let id = bundle.bundleIdentifier,
                   found[id] == nil
             else { continue }
@@ -78,10 +92,18 @@ final class SREditorCatalog: ObservableObject {
             }
         }
 
-        let stale = editors.filter { !$0.exists }
+        // 已删除的、以及旧扫描留在非标准目录里的自动条目都清掉；
+        // 手动添加的条目保留。
+        let stale = editors.filter { editor in
+            !editor.exists
+                || (editor.isManual != true
+                    && !SRBundleInspector.isInStandardLocation(editor.url))
+        }
         if !stale.isEmpty {
             result.removed = stale.map(\.name)
-            editors.removeAll { !$0.exists }
+            editors.removeAll { editor in
+                stale.contains { $0.id == editor.id }
+            }
         }
 
         sortAndPersist()
@@ -111,10 +133,11 @@ final class SREditorCatalog: ObservableObject {
         let folders = SRBundleInspector.declaresRole("Editor",
                                                      forAnyOf: ["public.folder", "public.directory"],
                                                      at: url)
-        let editor = SREditor.make(bundleID: id,
+        var editor = SREditor.make(bundleID: id,
                                    name: SRBundleInspector.name(at: url),
                                    path: url.path,
                                    opensFolders: folders)
+        editor.isManual = true
         editors.append(editor)
         sortAndPersist()
         return editor

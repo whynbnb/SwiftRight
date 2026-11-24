@@ -35,6 +35,9 @@ struct SRTerminal: Codable, Identifiable, Hashable {
     var argumentTemplate: String
     /// 来自内置配方（而非扫描出来的未知应用 / 手动添加）。
     var isBuiltin: Bool
+    /// 由「手动添加…」加进来的条目。自动扫描只处理标准应用目录，
+    /// 手动添加的位置不受限制，重新扫描时也不会被清掉。
+    var isManual: Bool?
 
     var url: URL { URL(fileURLWithPath: path) }
     var exists: Bool { FileManager.default.fileExists(atPath: path) }

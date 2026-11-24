@@ -54,6 +54,10 @@ struct SRTerminalTab: View {
                 Text(L("「在终端中运行」的命令会交给这里选中的终端。"))
                     .font(.caption)
                     .foregroundStyle(.secondary)
+                Text(L("只扫描 /Applications、/System/Applications 和 ~/Applications；装在别处请用「手动添加…」。"))
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
+                    .fixedSize(horizontal: false, vertical: true)
             }
         }
     }
