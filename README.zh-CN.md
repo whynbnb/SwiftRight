@@ -2,15 +2,57 @@
 
 [English](README.md)
 
-> 由 Claude Opus 5 Vibe Coding 而成。
+<p align="center">
+  <img src="docs/icon.png" width="112" alt="SwiftRight 图标">
+</p>
 
-macOS 访达（Finder）右键菜单扩展。在图形界面里定义任意 shell 命令，它们会立刻出现在右键菜单中，作用于当前选中的文件。
+<p align="center">
+  <img src="https://img.shields.io/badge/macOS-15%2B-blue" alt="macOS 15+">
+  <img src="https://img.shields.io/badge/Swift-6-orange" alt="Swift 6">
+  <img src="https://img.shields.io/badge/license-MIT-green" alt="MIT">
+</p>
+
+> Vibe Coding 而成（DeepSeek V4.1 Flash 1017 / OpenCode）
+
+macOS 访达（Finder）右键菜单扩展。在图形界面里定义任意 shell 命令，它们会立刻出现在右键菜单中，作用于当前选中的文件；也能一键生成终端、编辑器和新建文件命令。
 
 用 Swift / SwiftUI / Xcode 构建，无第三方依赖。
 
-<img src="docs/Right.png" width="420" alt="访达右键菜单里的 SwiftRight">
+## 使用（访达扩展）
 
-![命令管理界面](docs/Main.png)
+1. 打开一次 `SwiftRight.app`：写出初始配置，并向系统登记扩展
+2. **系统设置 › 通用 › 登录项与扩展 › 访达扩展**，勾选 **SwiftRight**
+3. 在访达里右键文件，或在窗口空白处右键
+   - 未分组的命令直接出现在菜单里
+   - 每个分组是一个子菜单；勾选了「收进二级菜单」的分组会收进公共的 `SwiftRight ▸` 里
+4. 点菜单项执行。运行方式支持后台静默、输出窗口（实时看 stdout/stderr）或交给任意终端
+5. 管理命令：菜单栏图标 → **管理命令…**（也可以双击「应用程序」里的 SwiftRight）
+   - 主窗口侧栏按分组展示，把命令拖到别的分组即可换组
+   - 点分组标题打开分组设置：启用、标题、图标、是否收进二级菜单
+   - 工具栏 **⋯ → 排序…** 打开独立的排序窗口，可跨分组拖动、批量开关
+
+![命令管理界面](docs/zh/main.png)
+
+App 不需要常驻：访达扩展独立读配置，点菜单项时才会按需拉起主 App。想完全不在后台留进程，在「设置 › 通用 › 后台常驻」里选「用完自动退出」即可。
+
+## 功能
+
+- **命令**：图形界面里写标题、图标、分组和脚本，点按钮插入占位符；支持 `#!` 脚本和环境变量
+- **分组**：侧栏和排序窗口按分组展示，拖动即可换组或排序；每个分组可以单独启用、改图标、决定是否收进二级菜单
+- **运行方式**：后台静默 / 输出窗口（实时流式输出）/ 在终端中运行
+- **适用范围**：仅文件 / 仅文件夹 / 都行，可再按扩展名过滤；不匹配的命令不会出现在菜单里
+- **工作目录**：选中项所在文件夹 / 选中的文件夹本身 / 当前访达窗口 / 自定义（支持占位符）
+- **运行选项**：每个选中项各跑一次、执行前确认、完成后通知、超时（15s / 30s / 45s / 1min 快选 + 自定义）
+- **试运行**：在编辑器里挑几个文件直接跑一次并查看输出，不用切到访达
+- **生成器**：扫描本机终端和编辑器，一键生成「在此处打开」命令；内置文件模板生成「新建文件」
+- **导入导出**：命令和菜单设置导出成 JSON，换机或备份都方便
+- **中英双语**：设置里切换即时生效
+
+## 截图
+
+| 设置 | 排序窗口 |
+| --- | --- |
+| ![设置](docs/zh/settings.png) | ![排序窗口](docs/zh/sort.png) |
 
 ---
 
@@ -26,7 +68,11 @@ xattr -dr com.apple.quarantine /Applications/SwiftRight.app
 
 **这条命令不是可选的。** 发布版是 ad-hoc 签名、未经公证的——原因和不执行的后果见下面的 [Gatekeeper](#gatekeeper)。
 
+安装完成后按上面的[使用说明](#使用访达扩展)打开一次 App 并启用扩展。
+
 ### 从源码构建
+
+要求 **macOS 15+**、**Xcode 16+**（Swift 6）、[XcodeGen](https://github.com/yonaskolb/XcodeGen)。
 
 ```bash
 swift Scripts/make-icon.swift   # 可选：生成 App 图标
@@ -38,16 +84,6 @@ swift Scripts/make-icon.swift   # 可选：生成 App 图标
 只编译不安装：`./Scripts/build.sh build`
 打分发产物：`./Scripts/package.sh` → `dist/`（zip + dmg，ad-hoc 签名）
 在 Xcode 里开发：`open SwiftRight.xcodeproj`（工程文件已入库，只有需要重新生成时才用得上 `xcodegen`）
-
-### 两种方式都要做的
-
-1. 打开一次 `/Applications/SwiftRight.app`
-2. **系统设置 › 通用 › 登录项与扩展 › 访达扩展**，勾选 **SwiftRight**
-3. 在访达里右键任意文件
-
-默认情况下 App 常驻菜单栏（不占 Dock）。点菜单栏图标 → **管理命令…** 打开编辑器。
-
-**需要让 App 一直挂后台吗？** 不需要。访达扩展是独立进程，直接读配置；点菜单项时 LaunchServices 会按需拉起主 App——实测冷启动约 0.29 秒、热启动约 0.18 秒。不想让它常驻的话，**设置 › 通用 › 后台常驻**里有「用完自动退出」。唯一的硬性要求是安装后打开一次 App，让它写出初始配置。
 
 ---
 
@@ -142,10 +178,9 @@ GUI 进程继承到的 `PATH` 通常很窄，执行前会自动补上 `/opt/home
 - **运行方式** — 后台静默 / 显示输出窗口（实时流式 stdout+stderr）/ 在终端中运行
 - **工作目录** — 选中项所在文件夹 / 选中的文件夹本身 / 当前访达窗口 / 自定义（支持占位符）
 - **适用范围** — 仅文件 / 仅文件夹 / 都行，可再按扩展名过滤；不满足条件的命令直接不出现在菜单里
-- **分组** — 同名分组自动收成二级子菜单
-- **每项单独运行** — 多选时对每个文件各起一个进程，而不是一次性全传进去
-- **执行前确认** / **完成后通知** / **超时**（秒，0 为不限）
-- 全局可切换：命令平铺在右键菜单顶层，还是收进一个二级菜单
+- **分组** — 同名命令收进同一个分组子菜单；分组是否收进共用的二级菜单、是否启用，由每个分组自己决定
+- **每项单独运行** — 多选时对每个文件各起一个进程，而不是一次性全传进去（不允许多选时自动禁用）
+- **执行前确认** / **完成后通知** / **超时**（15s / 30s / 45s / 1min 快选，右侧步进器可微调）
 
 编辑器里的**试运行**会弹出文件选择器让你挑几个文件当作"选中项"，立刻跑一次并显示输出 —— 不用切到访达反复试。
 
@@ -168,11 +203,13 @@ GUI 进程继承到的 `PATH` 通常很窄，执行前会自动补上 `/opt/home
 | Rio | `--working-dir {dir} -e {shell} {script}` |
 | Alacritty | `--working-directory {dir} -e {shell} {script}` |
 
+扫描范围只包括 `/Applications`、`/System/Applications` 和 `~/Applications`。开发目录、下载目录里注册过的副本不算，避免把临时解压的安装包也扫进来；装在别处的终端可以用「手动添加…」加进来，手动条目重新扫描时不会被清掉。
+
 内置清单之外的发现，按 `CFBundleTypeRole == "Shell"` 过滤 —— 那是应用在声明"我**执行**这类文件"。直接问 LaunchServices"谁能打开 shell 脚本"会把 Chrome、备忘录、Pages 和一堆文本编辑器全捞进来。
 
 kitty、WezTerm、Ghostty、rio 在命令退出时会连窗口一起关掉，短命令基本一闪而过。**命令结束后保持终端打开**（默认开）会在末尾接一个交互式 shell 并打印退出码。
 
-**编辑器。** 扫描本机编辑器，生成「在此处打开 Zed」这类命令。和终端不同，编辑器不需要 per-app 配方 —— `open -b <bundle id> <路径>` 对所有 GUI 编辑器都成立，而且按 bundle id 打开，应用升级搬家都不会失效。
+**编辑器。** 扫描本机编辑器，生成「在此处打开 Zed」这类命令。和终端不同，编辑器不需要 per-app 配方 —— `open -b <bundle id> <路径>` 对所有 GUI 编辑器都成立，而且按 bundle id 打开，应用升级搬家都不会失效。扫描范围和终端一致，手动添加的同样会保留。
 
 真正需要逐个记录的只有一件事：能不能把文件夹当工程打开，它决定生成的命令对文件夹生不生效。这一点不能从 `Info.plist` 读：VS Code、Zed、VSCodium 确实声明了 `public.folder`，但 JetBrains 全家和 Qt Creator 都没声明，实际却完全支持。
 
@@ -186,13 +223,14 @@ kitty、WezTerm、Ghostty、rio 在命令退出时会连窗口一起关掉，短
 
 从菜单栏图标打开，或按 ⌘,
 
-- **通用** — 语言（跟随系统 / 简体中文 / English，即时生效）、主题（跟随系统 / 浅色 / 深色）、后台常驻方式、后台命令失败时是否自动弹出输出窗口
-- **菜单** — 右键菜单外观
+- **通用** — 语言（跟随系统 / 简体中文 / English，即时生效）、主题（跟随系统 / 浅色 / 深色）、后台常驻方式、后台命令失败时是否自动弹出输出窗口；右键菜单的名称、图标和是否显示图标
 - **终端** — 扫描、手动添加、选默认、逐项调启动参数、单项测试、命令结束后是否保持终端打开
 - **编辑器** — 扫描、手动添加、切换是否可开工程、加到菜单
 - **新建文件** — 管理模板
 - **配置** — 导出 / 导入（追加或替换）、文件位置、恢复示例
 - **扩展** — 状态与排查
+
+分组相关的设置不在这里：主窗口侧栏或排序窗口里**点分组标题**，会弹出分组设置（启用、标题、图标、是否收进二级菜单）。
 
 ### 后台常驻
 
@@ -219,7 +257,9 @@ kitty、WezTerm、Ghostty、rio 在命令退出时会连窗口一起关掉，短
 3. 系统设置里是否勾选了 SwiftRight（App 侧边栏底部有实时状态灯）
 4. `killall Finder`
 
-侧边栏底部的 **?** 按钮会跳到同样的排查工具。
+**分组没有出现**
+
+点分组标题看一下「启用（显示在右键菜单中）」是不是关掉了；关掉的分组在侧栏和排序窗口里会压暗显示。
 
 **改了命令要重启访达吗**
 
@@ -242,7 +282,7 @@ security find-identity -v -p codesigning
 ```
 project.yml                  XcodeGen 工程定义（.xcodeproj 也已入库）
 Shared/                      App 与扩展共享的代码
-  SRCommand.swift              命令模型 + 菜单匹配逻辑
+  SRCommand.swift              命令模型、分组设置 + 菜单匹配逻辑
   SRConfigStore.swift          commands.json 读写 + 内置示例
   SRPaths.swift                绕开沙盒容器的真实路径
   SRPlaceholder.swift          占位符展开 + shell 转义
@@ -251,16 +291,17 @@ App/                         主 App（非沙盒）
   SwiftRightMain.swift         入口、菜单栏、URL 回调、后台常驻方式
   SRCommandRunner.swift        Process 执行、环境、超时、终端模式
   SRRunSession.swift           单次执行的可观察状态 + UTF-8 增量解码
-  SRAppModel.swift             界面数据源与命令生成器
+  SRAppModel.swift             界面数据源、分组操作与命令生成器
   SRPreferences.swift          语言 / 主题 / 常驻方式 / 本地化
   SRWindowManager.swift        窗口与 .accessory ⇄ .regular 激活策略
   SRTerminal*.swift            终端清单与启动配方
   SREditor*.swift              编辑器清单
   SRFileTemplate.swift         新建文件模板
   SRTemplateStore.swift        模板持久化
-  Views/                       SwiftUI 界面，含设置窗口与关于窗口
+  Views/                       SwiftUI 界面，含分组设置、排序窗口、设置与关于窗口
 FinderExtension/             访达扩展（沙盒）
   FinderSync.swift             监视范围、菜单构建、点击转发
+docs/                        README 截图与图标
 Scripts/
   build.sh                     编译 → 安装到 /Applications → 注册扩展
   package.sh                   编译 → ad-hoc 重签 → dist/ 下的 zip 与 dmg

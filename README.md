@@ -2,15 +2,57 @@
 
 [简体中文](README.zh-CN.md)
 
-> Vibe-coded with Claude Opus 5.
+<p align="center">
+  <img src="docs/icon.png" width="112" alt="SwiftRight icon">
+</p>
 
-A Finder context-menu extension for macOS. Define any shell command in a GUI and it shows up when you right-click, acting on whatever is selected.
+<p align="center">
+  <img src="https://img.shields.io/badge/macOS-15%2B-blue" alt="macOS 15+">
+  <img src="https://img.shields.io/badge/Swift-6-orange" alt="Swift 6">
+  <img src="https://img.shields.io/badge/license-MIT-green" alt="MIT">
+</p>
+
+> Vibe-coded with DeepSeek V4.1 Flash 1017 / OpenCode.
+
+A Finder context-menu extension for macOS. Define any shell command in a GUI and it shows up when you right-click, acting on whatever is selected. It can also generate terminal, editor and new-file commands for you.
 
 Built with Swift / SwiftUI / Xcode. No third-party dependencies.
 
-<img src="docs/Right.png" width="420" alt="SwiftRight in Finder's context menu">
+## Using the Finder extension
 
-![The command manager](docs/Main.png)
+1. Open `SwiftRight.app` once — it writes the initial config and registers the extension with the system
+2. **System Settings › General › Login Items & Extensions › Finder extensions** — enable **SwiftRight**
+3. Right-click a file, or empty space in a Finder window
+   - Commands with no group appear directly in the menu
+   - Each group is a submenu; groups marked *Put in Submenu* are collected under a shared `SwiftRight ▸`
+4. Click an item to run it. Execution can be silent in the background, stream into the output window, or hand off to any terminal
+5. Manage commands from the menu bar icon → **Manage Commands…** (or double-click SwiftRight in Applications)
+   - The sidebar is grouped; drag a command into another group to reassign it
+   - Click a group title for its settings: enabled, title, icon, and whether it uses the submenu
+   - Toolbar **⋯ → Sort…** opens a dedicated sort window with cross-group dragging and bulk toggles
+
+![The command manager](docs/en/main.png)
+
+The app does **not** need to stay running: the Finder extension reads the config on its own and the host app is launched on demand. To leave no background process at all, choose *Quit when idle* under **Settings › General › Background**.
+
+## Features
+
+- **Commands** — title, icon, group and script in a GUI; insert placeholders with one click, or write a `#!` script with environment variables
+- **Groups** — grouped sidebar and sort window, drag to regroup or reorder; every group can be enabled separately, get its own icon, and opt into the shared submenu
+- **Run modes** — silent background / output window (live stdout+stderr) / any terminal
+- **Scope** — files only / folders only / both, plus an extension filter; non-matching commands never appear
+- **Working directory** — folder containing the selection / the selected folder / current Finder window / custom (placeholders allowed)
+- **Run options** — once per selected item, confirm before running, notify on finish, timeout (15s / 30s / 45s / 1 min presets plus a stepper)
+- **Test Run** — pick files in the editor, run once and see the output without switching to Finder
+- **Generators** — scan installed terminals and editors to create *Open … here* commands; built-in file templates power **New File**
+- **Import / export** — commands and menu settings as JSON for backup or moving between Macs
+- **Chinese / English** — switch instantly in settings
+
+## Screenshots
+
+| Settings | Sort window |
+| --- | --- |
+| ![Settings](docs/en/settings.png) | ![Sort window](docs/en/sort.png) |
 
 ---
 
@@ -26,7 +68,11 @@ xattr -dr com.apple.quarantine /Applications/SwiftRight.app
 
 **That command is not optional.** The builds are ad-hoc signed and not notarized — see [Gatekeeper](#gatekeeper) below for why, and for what happens if you skip it.
 
+Then follow [Using the Finder extension](#using-the-finder-extension) to open the app once and enable the extension.
+
 ### From source
+
+Requires **macOS 15+**, **Xcode 16+** (Swift 6) and [XcodeGen](https://github.com/yonaskolb/XcodeGen).
 
 ```bash
 swift Scripts/make-icon.swift   # optional: generate the app icon
@@ -38,16 +84,6 @@ Locally built copies are signed with your own certificate and never quarantined,
 Build without installing: `./Scripts/build.sh build`
 Package a distributable: `./Scripts/package.sh` → `dist/` (zip + dmg, ad-hoc signed)
 Develop in Xcode: `open SwiftRight.xcodeproj` (the project file is committed; `xcodegen` is only needed to regenerate it)
-
-### Then, either way
-
-1. Open `/Applications/SwiftRight.app` once
-2. **System Settings › General › Login Items & Extensions › Finder extensions** — enable **SwiftRight**
-3. Right-click anything in Finder
-
-By default the app lives in the menu bar (no Dock icon). Click its icon → **Manage Commands…**
-
-**Does the app need to stay running?** No. The Finder extension is a separate process that reads the config directly; clicking a menu item launches the app on demand — measured at ~0.29 s cold versus ~0.18 s warm. If you'd rather it not stay resident, **Settings › General › Background** offers *Quit when idle*. The only hard requirement is opening the app once after installing, so it can write its initial config.
 
 ---
 
@@ -142,10 +178,9 @@ GUI processes inherit a narrow `PATH`, so `/opt/homebrew/bin` and `/usr/local/bi
 - **Execution** — silent background / live output window (streaming stdout+stderr) / hand off to a terminal
 - **Working directory** — folder containing the selection / the selected folder itself / current Finder window / custom (placeholders allowed)
 - **Scope** — files only / folders only / both, plus an extension filter. Commands that don't match simply don't appear in the menu
-- **Group** — commands sharing a group name collapse into a submenu
-- **Run once per item** — spawn a process per selected file instead of passing them all at once
-- **Confirm before running** / **notify when finished** / **timeout** (seconds, 0 = none)
-- Globally switchable: commands flat in the context menu, or collected under one submenu
+- **Groups** — commands sharing a group name collapse into a submenu; each group decides for itself whether it is enabled and whether it goes into the shared submenu
+- **Run once per item** — spawn a process per selected file instead of passing them all at once (disabled when multiple selection is off)
+- **Confirm before running** / **notify when finished** / **timeout** (15s / 30s / 45s / 1 min presets, stepper for fine tuning)
 
 **Test Run** in the editor opens a file picker to stand in for the selection, runs once and shows the output — no switching to Finder to iterate.
 
@@ -168,11 +203,13 @@ The toolbar `+` menu and the settings window can generate commands for you.
 | Rio | `--working-dir {dir} -e {shell} {script}` |
 | Alacritty | `--working-directory {dir} -e {shell} {script}` |
 
+Scanning only covers `/Applications`, `/System/Applications` and `~/Applications`. Copies registered from a dev or download folder are ignored, so unpacked installers don't show up; terminals installed elsewhere can be added with **Add Manually…**, and manual entries survive rescans.
+
 Discovery beyond the built-in list filters on `CFBundleTypeRole == "Shell"` — apps declaring they *execute* shell scripts. Asking LaunchServices "who can open a shell script" instead pulls in Chrome, Notes, Pages and every text editor.
 
 kitty, WezTerm, Ghostty and Rio close the window as soon as the command exits, so short commands flash past. **Keep the terminal open** (on by default) appends an interactive shell and prints the exit code.
 
-**Editors.** Scans for installed editors and generates *Open Zed here* style commands. Unlike terminals these need no per-app recipe — `open -b <bundle id> <path>` works everywhere, and opening by bundle id survives the app being updated or moved.
+**Editors.** Scans for installed editors and generates *Open Zed here* style commands. Unlike terminals these need no per-app recipe — `open -b <bundle id> <path>` works everywhere, and opening by bundle id survives the app being updated or moved. The scan scope matches terminals, and manual additions are kept.
 
 The one thing recorded per editor is whether it can open a folder as a project, which decides whether the command applies to folders. This cannot be read from `Info.plist`: VS Code, Zed and VSCodium declare `public.folder`, but the JetBrains IDEs and Qt Creator do not — yet all of them support it.
 
@@ -186,13 +223,14 @@ The generated command is an ordinary script using a heredoc, so it stays readabl
 
 Open from the menu bar icon, or ⌘,
 
-- **General** — language (System / 简体中文 / English, applied instantly), theme (System / Light / Dark), how the app stays in the background, whether a failed background command opens the output window
-- **Menu** — context menu appearance
+- **General** — language (System / 简体中文 / English, applied instantly), theme (System / Light / Dark), how the app stays in the background, whether a failed background command opens the output window; context menu title, icon and whether menu items show icons
 - **Terminal** — scan, add manually, pick the default, adjust launch arguments per terminal, test one, keep the terminal open after a command finishes
 - **Editors** — scan, add manually, toggle folder support, add to menu
 - **New File** — manage templates
 - **Configuration** — export / import (append or replace), file location, restore examples
 - **Extension** — status and troubleshooting
+
+Group settings live with the groups: click a group title in the main sidebar or the sort window to open its popover (enabled, title, icon, use the shared submenu).
 
 ### Background
 
@@ -219,7 +257,9 @@ With the icon hidden, open the interface by double-clicking SwiftRight in Applic
 3. Is SwiftRight enabled in System Settings? (the app's sidebar has a live status light)
 4. `killall Finder`
 
-The **?** button at the bottom of the sidebar jumps to the same tools.
+**A group doesn't show up**
+
+Click its title and check *Enabled (shown in the context menu)*. Disabled groups are dimmed in the sidebar and the sort window.
 
 **Do I need to restart Finder after editing a command?**
 
@@ -242,7 +282,7 @@ Note that the ten characters in parentheses of the certificate's common name are
 ```
 project.yml                  XcodeGen definition (the .xcodeproj is committed too)
 Shared/                      compiled into both the app and the extension
-  SRCommand.swift              command model + menu matching
+  SRCommand.swift              command model, group settings + menu matching
   SRConfigStore.swift          commands.json I/O + built-in examples
   SRPaths.swift                real paths, bypassing the sandbox container
   SRPlaceholder.swift          placeholder expansion + shell quoting
@@ -251,16 +291,17 @@ App/                         host app (not sandboxed)
   SwiftRightMain.swift         entry point, menu bar, URL callback, background residency
   SRCommandRunner.swift        Process execution, environment, timeout, terminal modes
   SRRunSession.swift           observable state of one run + incremental UTF-8 decoding
-  SRAppModel.swift             UI data source and command generators
+  SRAppModel.swift             UI data source, group actions and command generators
   SRPreferences.swift          language / theme / residency / localization
   SRWindowManager.swift        windows and the .accessory ⇄ .regular activation policy
   SRTerminal*.swift            terminal catalog and launch recipes
   SREditor*.swift              editor catalog
   SRFileTemplate.swift         new-file templates
   SRTemplateStore.swift        template persistence
-  Views/                       SwiftUI, including the settings and about windows
+  Views/                       SwiftUI, including group editor, sort, settings and about
 FinderExtension/             Finder extension (sandboxed)
   FinderSync.swift             monitored scope, menu building, click forwarding
+docs/                        README screenshots and icon
 Scripts/
   build.sh                     build → install to /Applications → register the extension
   package.sh                   build → ad-hoc re-sign → dist/ zip + dmg
