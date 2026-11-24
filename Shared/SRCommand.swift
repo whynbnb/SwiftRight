@@ -167,11 +167,9 @@ extension SRCommand {
 
 /// 与命令列表一起存盘的全局偏好。
 struct SRSettings: Codable, Hashable {
-    /// 顶层菜单项的名字。
+    /// 收进二级菜单的分组共用的菜单项名字。
     var menuTitle: String = "SwiftRight"
-    /// true = 收进一个二级菜单；false = 命令直接平铺在右键菜单顶层。
-    var useSubmenu: Bool = true
-    /// 顶层菜单项的 SF Symbol。
+    /// 共用的二级菜单项的 SF Symbol。
     var menuSymbol: String = "bolt.circle"
     /// 在菜单项里显示图标。
     var showIcons: Bool = true
@@ -179,21 +177,42 @@ struct SRSettings: Codable, Hashable {
     var groupOrder: [String] = []
     /// 分组的自定义图标（SF Symbol），没有记录时用默认的 folder。
     var groupIcons: [String: String] = [:]
+    /// 哪些分组收进「菜单名称」那个二级菜单里。没列进来的分组直接出现在
+    /// 右键菜单顶层（各自仍是一个分组子菜单）。
+    var submenuGroups: [String] = []
+    /// 不显示在右键菜单里的分组（分组级别的启用开关）。
+    var hiddenGroups: [String] = []
 
     init() {}
 
     enum CodingKeys: String, CodingKey {
-        case menuTitle, useSubmenu, menuSymbol, showIcons, groupOrder, groupIcons
+        case menuTitle, menuSymbol, showIcons, groupOrder, groupIcons,
+             submenuGroups, hiddenGroups
     }
 
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         menuTitle = try c.decodeIfPresent(String.self, forKey: .menuTitle) ?? "SwiftRight"
-        useSubmenu = try c.decodeIfPresent(Bool.self, forKey: .useSubmenu) ?? true
         menuSymbol = try c.decodeIfPresent(String.self, forKey: .menuSymbol) ?? "bolt.circle"
         showIcons = try c.decodeIfPresent(Bool.self, forKey: .showIcons) ?? true
         groupOrder = try c.decodeIfPresent([String].self, forKey: .groupOrder) ?? []
         groupIcons = try c.decodeIfPresent([String: String].self, forKey: .groupIcons) ?? [:]
+        submenuGroups = try c.decodeIfPresent([String].self, forKey: .submenuGroups) ?? []
+        hiddenGroups = try c.decodeIfPresent([String].self, forKey: .hiddenGroups) ?? []
+    }
+
+    /// 这个分组是否要收进共用的二级菜单。
+    func isInSubmenu(_ group: String) -> Bool {
+        let name = group.trimmingCharacters(in: .whitespaces)
+        guard !name.isEmpty else { return false }
+        return submenuGroups.contains(name)
+    }
+
+    /// 这个分组是否在右键菜单里被隐藏。
+    func isGroupHidden(_ group: String) -> Bool {
+        let name = group.trimmingCharacters(in: .whitespaces)
+        guard !name.isEmpty else { return false }
+        return hiddenGroups.contains(name)
     }
 
     /// 分组在菜单 / 侧边栏里显示的图标。

@@ -10,6 +10,8 @@ struct RootView: View {
     @ObservedObject private var templates = SRTemplateStore.shared
 
     @State private var columnVisibility: NavigationSplitViewVisibility = .automatic
+    /// 当前打开设置弹窗的分组名。
+    @State private var groupSettingsName: String?
 
     var body: some View {
         NavigationSplitView(columnVisibility: $columnVisibility) {
@@ -60,6 +62,7 @@ struct RootView: View {
 
     private func sidebarHeader(_ name: String) -> some View {
         let ungrouped = name.isEmpty
+        let hidden = !ungrouped && model.settings.isGroupHidden(name)
         return HStack(spacing: 8) {
             // 淡色底 + 强调色图标：比纯线框图标醒目，又不像实色方块那么重。
             Image(systemName: ungrouped ? "tray" : model.settings.symbol(for: name))
@@ -79,6 +82,21 @@ struct RootView: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.top, 8)
+        // 停用的分组在侧栏里压暗，点一下还能改回来。
+        .opacity(hidden ? 0.45 : 1)
+        .contentShape(Rectangle())
+        .onTapGesture {
+            guard !ungrouped else { return }
+            groupSettingsName = name
+        }
+        .help(ungrouped ? "" : L("点击设置分组"))
+        .popover(isPresented: Binding(
+            get: { groupSettingsName == name },
+            set: { if !$0 { groupSettingsName = nil } }
+        ), arrowEdge: .trailing) {
+            SRGroupEditor(group: name, model: model)
+                .environmentObject(model)
+        }
         .selectionDisabled()
         .moveDisabled(true)
         .listRowSeparator(.hidden)

@@ -13,14 +13,13 @@ struct SRSettingsView: View {
 
     /// 分页标识。用 enum 而不是 TabView 的隐式顺序，加减页不容易错位。
     private enum Tab: String, CaseIterable, Identifiable {
-        case general, extensionStatus, config, menu, terminal, editor, template
+        case general, extensionStatus, config, terminal, editor, template
 
         var id: String { rawValue }
 
         var title: String {
             switch self {
             case .general: return L("通用")
-            case .menu: return L("菜单")
             case .terminal: return L("终端")
             case .editor: return L("编辑器")
             case .template: return L("新建文件")
@@ -32,7 +31,6 @@ struct SRSettingsView: View {
         var symbol: String {
             switch self {
             case .general: return "gearshape"
-            case .menu: return "list.bullet.indent"
             case .terminal: return "terminal"
             case .editor: return "chevron.left.forwardslash.chevron.right"
             case .template: return "doc.badge.plus"
@@ -48,7 +46,7 @@ struct SRSettingsView: View {
         // 不用 TabView：macOS 26 起，TabView 作为窗口根内容时会把标签栏
         // 提升进标题栏，和红绿灯按钮挤在一起，窗口标题也被顶掉。
         //
-        // 也不用横向分段控件：七个分页在英文下（General / Menu / Terminal /
+        // 也不用横向分段控件：这几个分页在英文下（General / Terminal /
         // Editors / New File / Configuration / Extension）宽度就超了，
         // 两头会被切掉，而且以后加页只会更挤。
         //
@@ -89,7 +87,6 @@ struct SRSettingsView: View {
     private var content: some View {
         switch tab {
         case .general: SRGeneralTab()
-        case .menu: SRMenuAppearanceTab()
         case .terminal: SRTerminalTab()
         case .editor: SREditorTab()
         case .template: SRTemplateTab()
@@ -104,6 +101,7 @@ struct SRSettingsView: View {
 private struct SRGeneralTab: View {
 
     @EnvironmentObject private var preferences: SRPreferences
+    @EnvironmentObject private var model: SRAppModel
 
     var body: some View {
         ScrollView {
@@ -153,54 +151,35 @@ private struct SRGeneralTab: View {
                         .fixedSize(horizontal: false, vertical: true)
                 }
 
+                SRSection(L("右键菜单")) {
+                    LabeledContent(L("菜单名称")) {
+                        TextField("SwiftRight", text: $model.settings.menuTitle)
+                            .textFieldStyle(.roundedBorder)
+                    }
+                    LabeledContent(L("菜单图标")) {
+                        SRSymbolPicker(symbol: $model.settings.menuSymbol)
+                    }
+                    Toggle(L("在菜单项上显示图标"), isOn: $model.settings.showIcons)
+
+                    Text(L("「%@」是收进二级菜单的分组共用的那一项。分组是否收进这里、是否启用，在侧栏或排序窗口点分组标题设置。", secondaryMenuTitle))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+
+                    Text(L("改动会立即写入配置文件，访达扩展下一次右键就会读到，不需要重启访达。"))
+                        .font(.caption2)
+                        .foregroundStyle(.tertiary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+
                 Spacer(minLength: 0)
             }
         }
     }
-}
 
-// MARK: - 菜单外观
-
-private struct SRMenuAppearanceTab: View {
-
-    @EnvironmentObject private var model: SRAppModel
-
-    var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 18) {
-                SRSection(L("右键菜单")) {
-                    Toggle(L("收进一个二级菜单"), isOn: $model.settings.useSubmenu)
-
-                    Text(model.settings.useSubmenu
-                         ? L("右键菜单里只出现一项，命令都在它的子菜单下。")
-                         : L("所有命令直接平铺在右键菜单里。命令多了会很长，慎用。"))
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
-
-                    if model.settings.useSubmenu {
-                        LabeledContent(L("菜单名称")) {
-                            TextField("SwiftRight", text: $model.settings.menuTitle)
-                                .textFieldStyle(.roundedBorder)
-                        }
-                        LabeledContent(L("菜单图标")) {
-                            SRSymbolPicker(symbol: $model.settings.menuSymbol)
-                        }
-                    }
-
-                    Toggle(L("在菜单项上显示图标"), isOn: $model.settings.showIcons)
-                }
-
-                SRSection(L("生效方式")) {
-                    Text(L("改动会立即写入配置文件，访达扩展下一次右键就会读到，不需要重启访达。"))
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-
-                Spacer(minLength: 0)
-            }
-        }
+    private var secondaryMenuTitle: String {
+        let title = model.settings.menuTitle.trimmingCharacters(in: .whitespaces)
+        return title.isEmpty ? "SwiftRight" : title
     }
 }
 

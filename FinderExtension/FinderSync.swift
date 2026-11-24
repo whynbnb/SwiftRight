@@ -96,46 +96,54 @@ final class FinderSync: FIFinderSync, @unchecked Sendable {
         }
         let groupNames = config.settings.orderedGroups(for: candidates)
 
-        func buildItems(into menu: NSMenu) {
-            for command in ungrouped {
-                menu.addItem(makeItem(for: command, tag: &nextTag, settings: config.settings))
+        let menu = NSMenu(title: config.settings.menuTitle)
+
+        // 每个分组自己决定要不要收进共用的二级菜单：勾选的分组放进
+        // 「菜单名称」那一项里，其余分组直接挂在右键菜单顶层。
+        for command in ungrouped {
+            menu.addItem(makeItem(for: command, tag: &nextTag, settings: config.settings))
+        }
+
+        var submenuItems: [NSMenuItem] = []
+        for group in groupNames {
+            // 分组自己的启用开关：关掉后整组都不出现。
+            guard !config.settings.isGroupHidden(group) else { continue }
+
+            let commands = candidates.filter {
+                $0.group.trimmingCharacters(in: .whitespaces) == group
+            }
+            guard !commands.isEmpty else { continue }
+
+            let submenu = NSMenu(title: group)
+            for command in commands {
+                submenu.addItem(makeItem(for: command, tag: &nextTag, settings: config.settings))
+            }
+            let holder = NSMenuItem(title: group, action: nil, keyEquivalent: "")
+            holder.submenu = submenu
+            if config.settings.showIcons {
+                holder.image = symbolImage(config.settings.symbol(for: group))
             }
 
-            for group in groupNames {
-                let commands = candidates.filter {
-                    $0.group.trimmingCharacters(in: .whitespaces) == group
-                }
-                guard !commands.isEmpty else { continue }
-
-                let submenu = NSMenu(title: group)
-                for command in commands {
-                    submenu.addItem(makeItem(for: command, tag: &nextTag, settings: config.settings))
-                }
-                let holder = NSMenuItem(title: group, action: nil, keyEquivalent: "")
-                holder.submenu = submenu
-                if config.settings.showIcons {
-                    holder.image = symbolImage(config.settings.symbol(for: group))
-                }
+            if config.settings.isInSubmenu(group) {
+                submenuItems.append(holder)
+            } else {
                 menu.addItem(holder)
             }
         }
 
-        let menu = NSMenu(title: config.settings.menuTitle)
-
-        if config.settings.useSubmenu {
+        if !submenuItems.isEmpty {
             let submenu = NSMenu(title: config.settings.menuTitle)
-            buildItems(into: submenu)
+            for item in submenuItems { submenu.addItem(item) }
             let root = NSMenuItem(title: config.settings.menuTitle, action: nil, keyEquivalent: "")
             root.submenu = submenu
             if config.settings.showIcons {
                 root.image = symbolImage(config.settings.menuSymbol)
             }
             menu.addItem(root)
-        } else {
-            buildItems(into: menu)
         }
 
-        return menu
+        // 全部分组都被关掉、又没有未分组命令时，别留一个空菜单。
+        return menu.items.isEmpty ? nil : menu
     }
 
     private func makeItem(for command: SRCommand, tag: inout Int, settings: SRSettings) -> NSMenuItem {

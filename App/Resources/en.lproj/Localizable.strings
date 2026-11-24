@@ -343,3 +343,7 @@
 "先把上面的「允许多选」打开。" = "Turn on “Allow Multiple Selection” above first.";
 "%@ 分钟" = "%@ min";
 "只扫描 /Applications、/System/Applications 和 ~/Applications；装在别处请用「手动添加…」。" = "Only /Applications, /System/Applications and ~/Applications are scanned. Use “Add Manually…” for apps installed elsewhere.";
+"收进二级菜单" = "Put in Submenu";
+"收进二级菜单后，这个分组会出现在「%@」下面。" = "When on, this group appears under “%@”. ";
+"点击设置分组" = "Click to edit this group";
+"「%@」是收进二级菜单的分组共用的那一项。分组是否收进这里、是否启用，在侧栏或排序窗口点分组标题设置。" = "“%@” is shared by groups in the submenu. Click a group title in the sidebar or the sort window to choose whether it uses that submenu and whether it is enabled.";

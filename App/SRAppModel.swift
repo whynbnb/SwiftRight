@@ -490,6 +490,27 @@ final class SRAppModel: ObservableObject {
         }
         settings.groupIcons = icons
 
+        // 二级菜单归属和隐藏状态跟着分组名一起迁过去。
+        var submenus = settings.submenuGroups
+        if let index = submenus.firstIndex(of: oldName) {
+            if submenus.contains(newName) {
+                submenus.remove(at: index)
+            } else {
+                submenus[index] = newName
+            }
+        }
+        settings.submenuGroups = submenus
+
+        var hidden = settings.hiddenGroups
+        if let index = hidden.firstIndex(of: oldName) {
+            if hidden.contains(newName) {
+                hidden.remove(at: index)
+            } else {
+                hidden[index] = newName
+            }
+        }
+        settings.hiddenGroups = hidden
+
         var order = settings.groupOrder
         if let index = order.firstIndex(of: oldName) {
             if order.contains(newName) {
@@ -503,6 +524,32 @@ final class SRAppModel: ObservableObject {
         settings.groupOrder = order
 
         commit(sections: sections)
+    }
+
+    /// 分组级别的启用开关：关掉后整个分组不出现在右键菜单里。
+    func setGroupHidden(_ hidden: Bool, for group: String) {
+        let name = group.trimmingCharacters(in: .whitespaces)
+        guard !name.isEmpty else { return }
+        var list = settings.hiddenGroups
+        if hidden {
+            if !list.contains(name) { list.append(name) }
+        } else {
+            list.removeAll { $0 == name }
+        }
+        settings.hiddenGroups = list
+    }
+
+    /// 分组是否收进共用的二级菜单。
+    func setGroupInSubmenu(_ on: Bool, for group: String) {
+        let name = group.trimmingCharacters(in: .whitespaces)
+        guard !name.isEmpty else { return }
+        var list = settings.submenuGroups
+        if on {
+            if !list.contains(name) { list.append(name) }
+        } else {
+            list.removeAll { $0 == name }
+        }
+        settings.submenuGroups = list
     }
 
     /// 设置分组图标。空字符串或默认的 folder 会清除自定义图标。

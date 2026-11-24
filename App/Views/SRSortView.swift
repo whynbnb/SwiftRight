@@ -81,6 +81,7 @@ struct SRSortView: View {
                         ForEach(model.sortGroupNames, id: \.self) { group in
                             Label(group, systemImage: model.settings.symbol(for: group))
                                 .lineLimit(1)
+                                .opacity(model.settings.isGroupHidden(group) ? 0.45 : 1)
                                 .tag(SortFilter.group(group))
                         }
                         .onMove { model.moveGroup(from: $0, to: $1) }
@@ -180,8 +181,13 @@ struct SRSortView: View {
                                 SRGroupHeader(
                                     name: section.name,
                                     symbol: model.settings.symbol(for: section.name),
-                                    onRename: { renameGroup(from: section.name, to: $0) },
-                                    onSymbol: { model.setGroupSymbol($0, for: section.name) }
+                                    hidden: model.settings.isGroupHidden(section.name),
+                                    onRenamed: { old, new in
+                                        if case .group(let selected) = filter,
+                                           selected == old {
+                                            filter = .group(new)
+                                        }
+                                    }
                                 )
                             }
                         }
@@ -342,70 +348,52 @@ struct SRSortView: View {
         }
         model.addCommand(in: group)
     }
-
-    /// 返回最终使用的分组名，供行内编辑框回填。
-    private func renameGroup(from old: String, to draft: String) -> String {
-        let target = draft.trimmingCharacters(in: .whitespaces)
-        guard !target.isEmpty, target != old else { return old }
-        model.renameGroup(from: old, to: target)
-        if case .group(let selected) = filter, selected == old {
-            filter = .group(target)
-        }
-        return target
-    }
 }
 
 // MARK: - 分组标题
 
-/// 右侧每个分组的标题行：图标可点开选择器，名称直接编辑。
+/// 右侧每个分组的标题行：点一下打开分组设置（启用 / 标题 / 图标 / 二级菜单）。
 private struct SRGroupHeader: View {
 
     let name: String
     let symbol: String
-    let onRename: (String) -> String
-    let onSymbol: (String) -> Void
+    let hidden: Bool
+    let onRenamed: (String, String) -> Void
 
-    @State private var draft: String
-    @FocusState private var focused: Bool
-
-    init(name: String,
-         symbol: String,
-         onRename: @escaping (String) -> String,
-         onSymbol: @escaping (String) -> Void) {
-        self.name = name
-        self.symbol = symbol
-        self.onRename = onRename
-        self.onSymbol = onSymbol
-        _draft = State(initialValue: name)
-    }
+    @EnvironmentObject private var model: SRAppModel
+    @State private var showingEditor = false
 
     var body: some View {
-        HStack(spacing: 6) {
-            SRSymbolPicker(
-                symbol: Binding(get: { symbol }, set: { onSymbol($0) }),
-                compact: true,
-                compactTint: .accentColor
-            )
-
-            TextField(L("分组名称"), text: $draft)
-                .textFieldStyle(.plain)
-                .font(.subheadline.weight(.semibold))
-                .lineLimit(1)
-                .focused($focused)
-                .onSubmit { commit() }
-                .onChange(of: focused) { _, isFocused in
-                    if !isFocused { commit() }
-                }
-
-            Spacer(minLength: 0)
+        Button {
+            showingEditor = true
+        } label: {
+            HStack(spacing: 8) {
+                Image(systemName: symbol)
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(.secondary)
+                    .frame(width: 20, height: 20)
+                    .background(
+                        RoundedRectangle(cornerRadius: 4, style: .continuous)
+                            .fill(Color.primary.opacity(0.07))
+                    )
+                Text(name)
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                Image(systemName: "slider.horizontal.3")
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
+                Spacer(minLength: 0)
+            }
+            .contentShape(Rectangle())
         }
-        .onChange(of: name) { _, newName in
-            if !focused { draft = newName }
+        .buttonStyle(.plain)
+        .opacity(hidden ? 0.45 : 1)
+        .help(L("点击设置分组"))
+        .popover(isPresented: $showingEditor, arrowEdge: .bottom) {
+            SRGroupEditor(group: name, model: model, onRenamed: onRenamed)
+                .environmentObject(model)
         }
-    }
-
-    private func commit() {
-        draft = onRename(draft)
     }
 }
 
