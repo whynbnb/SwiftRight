@@ -178,16 +178,12 @@ final class FinderSync: FIFinderSync, @unchecked Sendable {
 
     /// 当前是不是深色外观。
     ///
-    /// 扩展进程的 `effectiveAppearance` 不一定跟随访达（有可能一直停在 aqua），
-    /// 所以再读一遍全局的 `AppleInterfaceStyle` 兜底。
+    /// 注意：访达是在自己的 XPC 队列上调用 `menu(for:)` 的，不是主线程，
+    /// 所以这里不能碰 `NSApp` / `NSAppearance`（Swift 6 的主线程断言会直接
+    /// 触发 SIGTRAP，扩展就崩了，右键菜单也就不出现）。改读系统偏好里的
+    /// `AppleInterfaceStyle` —— 访达菜单跟随的正是这个开关。
     private static func prefersDarkAppearance() -> Bool {
-        // menu(for:) 由访达在主线程调用，这里直接按主线程读取外观。
-        let isDark = MainActor.assumeIsolated { () -> Bool in
-            guard let appearance = NSApp?.effectiveAppearance else { return false }
-            return appearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
-        }
-        if isDark { return true }
-        return UserDefaults.standard
+        UserDefaults.standard
             .string(forKey: "AppleInterfaceStyle")?
             .caseInsensitiveCompare("Dark") == .orderedSame
     }
